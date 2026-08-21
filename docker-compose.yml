@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  trustred:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-file:./data/trustred-cms.db}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-trustred-local-dev-secret}
+    ports:
+      - '3000:3000'
+    volumes:
+      - trustred-data:/app/data
+      - trustred-media:/app/media
+    restart: unless-stopped
+
+volumes:
+  trustred-data:
+  trustred-media:

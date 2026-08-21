@@ -1,0 +1,85 @@
+{
+  "name": "trustred-cms",
+  "version": "1.0.0",
+  "description": "Self-hostable CMS for fire departments, aid organizations, and civil protection teams",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "docker:build": "docker build -t trustred-cms:latest .",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "devsafe": "cross-env-shell NODE_OPTIONS=--no-deprecation \"rm -rf .next && next dev\"",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "seed": "cross-env NODE_OPTIONS=--no-deprecation node --import=tsx/esm ./scripts/seed.ts",
+    "seed:empty": "cross-env NODE_OPTIONS=--no-deprecation node --import=tsx/esm ./scripts/seed.ts --empty",
+    "seed:user": "cross-env NODE_OPTIONS=--no-deprecation node --import=tsx/esm ./scripts/seed-user.ts",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "test": "cross-env-shell NODE_OPTIONS=--no-deprecation \"pnpm run test:int && pnpm run test:e2e\"",
+    "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
+    "verify:starter": "cross-env NODE_OPTIONS=--no-deprecation node --import=tsx/esm ./scripts/verify-starter-content.ts"
+  },
+  "dependencies": {
+    "@payloadcms/db-sqlite": "3.88.0",
+    "@payloadcms/next": "3.88.0",
+    "@payloadcms/plugin-form-builder": "3.88.0",
+    "@payloadcms/plugin-nested-docs": "3.88.0",
+    "@payloadcms/plugin-seo": "3.88.0",
+    "@payloadcms/richtext-lexical": "3.88.0",
+    "@payloadcms/storage-s3": "3.88.0",
+    "@payloadcms/ui": "3.88.0",
+    "cross-env": "^10.1.0",
+    "dotenv": "17.4.2",
+    "graphql": "^16.8.1",
+    "next": "16.3.1",
+    "nodemailer": "^9.0.5",
+    "payload": "3.88.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "0.35.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "1.62.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/react": "16.3.2",
+    "@types/node": "26.2.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.1",
+    "jsdom": "30.0.1",
+    "pnpm": "^11.22.0",
+    "prettier": "^3.9.6",
+    "tsx": "4.23.12",
+    "typescript": "^6.0.3",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": "^9 || ^10 || ^11"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver"
+    ]
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true,
+    "fsevents": false,
+    "unrs-resolver@1.12.2": true
+  },
+  "overrides": {
+    "dompurify": "3.4.14"
+  }
+}

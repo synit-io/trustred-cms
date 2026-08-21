@@ -1,0 +1,14 @@
+{
+  "name": "trustred-cms",
+  "version": "1.0.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "NODE_OPTIONS=--no-deprecation node ./scripts/run-migrations.js",
+    "seed": "NODE_ENV=development NODE_OPTIONS=--no-deprecation node ./scripts/seed.js",
+    "seed:empty": "NODE_ENV=development NODE_OPTIONS=--no-deprecation node ./scripts/seed.js --empty",
+    "seed:user": "NODE_ENV=development NODE_OPTIONS=--no-deprecation node ./scripts/seed-user.js",
+    "start": "node server.js"
+  }
+}
