@@ -38,6 +38,8 @@ Minimum development configuration:
 ```dotenv
 DATABASE_URL=file:./data/trustred-cms.db
 PAYLOAD_SECRET=replace-with-a-local-secret
+SETUP_TOKEN=replace-with-a-local-setup-token
+SITE_TIMEZONE=Europe/Berlin
 ```
 
 Start development mode:
@@ -83,6 +85,12 @@ warning presets, media, and bundled demo images.
 Demo content is intentionally separate from database migrations. Migrations must
 not silently introduce customer-facing demo content.
 
+Run `npm run migrate` before either seed command on a new or upgraded database.
+The source runner uses `src/migrations/index.ts`; the Docker image runs the same
+logic against its bundled migration index. Existing databases created by
+Payload's development schema push skip the baseline and continue with additive
+migrations without an interactive prompt.
+
 ### Development user
 
 ```bash
@@ -109,6 +117,7 @@ npm run test:int
 npm run test:e2e
 npm run generate:types
 npm run generate:importmap
+npm run migrate
 npm run seed
 npm run seed:empty
 npm run seed:user
@@ -121,6 +130,8 @@ npm run verify:starter
 - Run `npm run generate:importmap` after adding or changing Payload admin
   components.
 - Import project document types from `src/payload-types.ts`.
+- Commit a Payload migration for every schema change. CI verifies generated types
+  and the import map are current.
 
 ## Payload safety rules
 

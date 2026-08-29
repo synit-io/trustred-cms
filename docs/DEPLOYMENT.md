@@ -47,9 +47,10 @@ cd /opt/trustred-cms
 
 ## 2. Create the environment file
 
-Generate a unique secret:
+Generate independent application and setup secrets:
 
 ```bash
+openssl rand -hex 32
 openssl rand -hex 32
 ```
 
@@ -58,6 +59,8 @@ Create `/opt/trustred-cms/.env`:
 ```dotenv
 DATABASE_URL=file:./data/trustred-cms.db
 PAYLOAD_SECRET=replace-with-the-generated-secret
+SETUP_TOKEN=replace-with-the-second-generated-secret
+SITE_TIMEZONE=Europe/Berlin
 TRUSTRED_RUN_MIGRATIONS=true
 
 S3_BUCKET=
@@ -76,7 +79,8 @@ chmod 600 .env
 
 Keep `PAYLOAD_SECRET` stable. Replacing it invalidates existing sessions and may
 break data protected with that secret. Never use the repository's development
-fallback in production.
+fallback in production. `SETUP_TOKEN` is required to create the first
+super-admin. Rotate it after setup and keep the replacement private.
 
 ## 3. Create the Compose file
 
@@ -94,6 +98,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-file:./data/trustred-cms.db}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
+      SETUP_TOKEN: ${SETUP_TOKEN:?Set SETUP_TOKEN in .env}
+      SITE_TIMEZONE: ${SITE_TIMEZONE:-Europe/Berlin}
       TRUSTRED_RUN_MIGRATIONS: ${TRUSTRED_RUN_MIGRATIONS:-true}
     ports:
       - '127.0.0.1:3000:3000'
@@ -156,9 +162,10 @@ media files.
 
 ## 6. Complete first-run setup
 
-Open `https://cms.example.org/setup` immediately after the first start. The setup
-flow creates the first `super-admin` user and captures the initial organization,
-branding, contact, imprint, and optional SMTP settings.
+Open `https://cms.example.org/setup` after the first start and enter the
+`SETUP_TOKEN` from `.env`. The token-protected, transactional setup creates the
+first `super-admin` user and captures the initial organization, branding,
+contact, imprint, and optional SMTP settings.
 
 After setup:
 
@@ -166,7 +173,7 @@ After setup:
 - super-admin maintenance remains available at `/admin`
 - public content is served from `/`
 
-Do not leave a fresh instance publicly reachable with setup unfinished.
+Do not share the setup token. Rotate it after setup succeeds.
 
 ## Persistent data
 
@@ -272,7 +279,8 @@ Common causes:
 ## Security checklist
 
 - use a unique, backed-up `PAYLOAD_SECRET`
-- finish `/setup` immediately
+- use a separate private `SETUP_TOKEN` and rotate it after setup
+- configure the organization's IANA `SITE_TIMEZONE`
 - expose only HTTPS through the reverse proxy
 - keep `.env` readable only by administrators
 - update the host, Docker Engine, proxy, and TrustRed image regularly

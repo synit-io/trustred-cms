@@ -79,10 +79,17 @@ Payload enforces that user's permissions.
 The public frontend renders Payload-managed pages and structured collection
 routes. The visual page builder stores typed blocks for hero content, rich text,
 media, forms, warnings, equipment, operation lists, feeds, calls to action, and
-controlled custom HTML.
+allowlist-sanitized custom HTML.
+
+Shared block labels and descriptions live in the typed `pageBlockRegistry`.
+Defaults, summaries, and validation are owned by focused page-builder modules so
+the client builder remains orchestration and editing UI.
 
 Specialized routes serve collection overviews and details for news, events,
 operations, equipment, team members, and FAQs.
+
+Public CMS routes use dynamic server rendering so published changes are read at
+request time instead of being frozen into the production build.
 
 ## Data and media
 
@@ -104,18 +111,25 @@ enables S3-compatible object storage and disables local media storage.
 
 ## Forms and email
 
-Payload Form Builder provides reusable public forms. SMTP configuration is
-managed through `/manage/settings`, including host, port, credentials, sender
-identity, TLS options, and test delivery. SMTP is disabled by default.
+Payload Form Builder provides reusable public forms. Form definitions are
+restricted to content roles through Payload; public pages receive them only
+through the server renderer. Submission creation is accepted only through the
+validated server action; submission PII is restricted to settings roles. The
+server validates required fields, types, options, length,
+honeypot state, and per-client rate limits before writing or sending email. SMTP
+configuration is managed through `/manage/settings`, including host, port,
+credentials, sender identity, TLS options, and test delivery. SMTP is disabled by
+default.
 
 ## Database initialization and migrations
 
 The container checks database state during startup.
 
-If `src/migrations/index.ts` exists at build time, the migration bundle is
-included in the image and pending migrations can run before the application
-server starts. A completely fresh SQLite database without a `users` table can be
-initialized before startup.
+`src/migrations/index.ts` is bundled into the image and pending migrations run
+before the application server starts. Fresh databases run the baseline and all
+later migrations. Databases created before migration tracking skip only the
+baseline and run later idempotent migrations. This preserves existing data while
+moving installations onto the tracked migration path.
 
 Automatic startup migration checks can be disabled with:
 
@@ -125,6 +139,10 @@ TRUSTRED_RUN_MIGRATIONS=false
 
 Database migrations must not seed customer-facing demo content by default. Any
 migration intentionally writing demo data must use the demo-content guard.
+
+The configured `SITE_TIMEZONE` is the single timezone used to interpret
+editor-entered wall times and format public dates. ICS output remains UTC and
+declares the configured site timezone.
 
 Nested Payload operations inside hooks must receive the original `req` to remain
 inside the same transaction. Hook-triggered writes must use context guards when
