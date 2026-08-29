@@ -9,7 +9,9 @@ services:
       - .env
     environment:
       DATABASE_URL: ${DATABASE_URL:-file:./data/trustred-cms.db}
-      PAYLOAD_SECRET: ${PAYLOAD_SECRET:-trustred-local-dev-secret}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET}
+      SETUP_TOKEN: ${SETUP_TOKEN:?Set SETUP_TOKEN}
+      SITE_TIMEZONE: ${SITE_TIMEZONE:-Europe/Berlin}
     ports:
       - '3000:3000'
     volumes:

@@ -23,6 +23,7 @@ import {
   getPublicOperations,
   getWarningSettings,
 } from '@/lib/trustred/cms'
+import { sanitizeHtmlFragment } from '@/lib/trustred/html'
 import { toRelationId } from '@/lib/trustred/page-builder'
 import {
   eventTypeLabels,
@@ -43,6 +44,7 @@ import {
 } from '@/lib/trustred/public-content'
 import { applyWarningPresetToBlock, findWarningPreset } from '@/lib/trustred/warning-presets'
 import { getWarningSnapshotFromConfig } from '@/lib/trustred/warnings'
+import { getSiteTimeZone } from '@/lib/trustred/time'
 
 type Props = {
   faqOpenId?: string | null
@@ -201,6 +203,7 @@ const dateFormat = new Intl.DateTimeFormat('de-DE', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
+  timeZone: getSiteTimeZone(),
 })
 
 function imageUrl(media?: number | Media | null) {
@@ -609,7 +612,11 @@ export async function PageRenderer({
               ) : (
                 <div className="ff-grid-3">
                   {items.map((item, itemIndex) =>
-                    renderFeedCard(feedBlock.source, item as Record<string, unknown>, itemIndex),
+                    renderFeedCard(
+                      feedBlock.source,
+                      item as unknown as Record<string, unknown>,
+                      itemIndex,
+                    ),
                   )}
                 </div>
               )}
@@ -1075,7 +1082,7 @@ export async function PageRenderer({
           <section className="ff-section" key={index}>
             <div
               className="site-container prose prose-neutral max-w-none rounded-[2rem] border border-neutral-200 bg-white p-8 shadow-sm"
-              dangerouslySetInnerHTML={{ __html: htmlBlock.html }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtmlFragment(htmlBlock.html) }}
             />
           </section>
         )

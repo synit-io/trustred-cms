@@ -9,6 +9,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
+import { hasRole, trustredRoles } from './access/hasRole'
 import { Crew } from './collections/Crew'
 import { Equipment } from './collections/Equipment'
 import { Events } from './collections/Events'
@@ -65,6 +66,11 @@ function getStoragePlugin() {
 }
 
 const storagePlugin = getStoragePlugin()
+const configuredPayloadSecret = process.env.PAYLOAD_SECRET?.trim()
+
+if (!configuredPayloadSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('PAYLOAD_SECRET is required in production.')
+}
 
 export default buildConfig({
   admin: {
@@ -87,7 +93,7 @@ export default buildConfig({
   ],
   editor: lexicalEditor(),
   globals: [SiteSettings, SetupState],
-  secret: process.env.PAYLOAD_SECRET || 'trustred-local-dev-secret',
+  secret: configuredPayloadSecret || 'trustred-local-dev-secret',
   email: runtimeSMTPAdapter,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
@@ -96,6 +102,9 @@ export default buildConfig({
     client: {
       url:
         process.env.DATABASE_URL || `file:${path.resolve(process.cwd(), 'data/trustred.sqlite')}`,
+    },
+    transactionOptions: {
+      behavior: 'immediate',
     },
   }),
   sharp,
@@ -126,6 +135,33 @@ export default buildConfig({
     formBuilderPlugin({
       fields: {
         payment: false,
+      },
+      formOverrides: {
+        access: {
+          create: hasRole(trustredRoles.content),
+          delete: hasRole(trustredRoles.content),
+          read: hasRole(trustredRoles.content),
+          update: hasRole(trustredRoles.content),
+        },
+      },
+      formSubmissionOverrides: {
+        access: {
+          create: () => false,
+          delete: hasRole(trustredRoles.settings),
+          read: hasRole(trustredRoles.settings),
+          update: () => false,
+        },
+        fields: ({ defaultFields }) => [
+          ...defaultFields,
+          {
+            name: 'requestFingerprint',
+            type: 'text',
+            admin: {
+              hidden: true,
+            },
+            index: true,
+          },
+        ],
       },
     }),
   ],

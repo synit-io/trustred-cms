@@ -1,3 +1,5 @@
+import { createHmac } from 'node:crypto'
+import { headers } from 'next/headers'
 import { cache } from 'react'
 
 import type { Payload } from 'payload'
@@ -11,8 +13,7 @@ type PublicFormKey = 'contact' | 'join'
 type PublicFormField = NonNullable<Form['fields']>[number]
 type PublicInputField = Exclude<PublicFormField, { blockType: 'message' }>
 export type PublicFormReference =
-  | { id: number; kind: 'custom' }
-  | { key: PublicFormKey; kind: 'preset' }
+  { id: number; kind: 'custom' } | { key: PublicFormKey; kind: 'preset' }
 
 type PublicFormConfig = {
   description: string
@@ -21,6 +22,11 @@ type PublicFormConfig = {
   fields: NonNullable<Form['fields']>
   submitButtonLabel: string
 }
+
+const MAX_FIELD_LENGTH = 5000
+const MAX_SUBMISSION_LENGTH = 20_000
+const RATE_LIMIT_MAX_SUBMISSIONS = 5
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 
 const defaultPublicForms: Record<PublicFormKey, PublicFormConfig> = {
   contact: {
@@ -68,7 +74,8 @@ const defaultPublicForms: Record<PublicFormKey, PublicFormConfig> = {
   },
   join: {
     description: 'Anfrage für Interessierte, die mitmachen oder die Wehr kennenlernen möchten.',
-    successMessage: 'Danke für dein Interesse. Wir melden uns mit den nächsten Schritten und einem passenden Kennenlerntermin.',
+    successMessage:
+      'Danke für dein Interesse. Wir melden uns mit den nächsten Schritten und einem passenden Kennenlerntermin.',
     submitButtonLabel: 'Interesse senden',
     title: 'Mitmachen Formular',
     fields: [
@@ -121,7 +128,8 @@ const defaultPublicForms: Record<PublicFormKey, PublicFormConfig> = {
       },
       {
         blockType: 'checkbox',
-        label: 'Ich wünsche mir eine unverbindliche Rückmeldung zu Kennenlern- oder Mitmachmöglichkeiten.',
+        label:
+          'Ich wünsche mir eine unverbindliche Rückmeldung zu Kennenlern- oder Mitmachmöglichkeiten.',
         name: 'followUpRequested',
         required: false,
         width: 100,
@@ -209,11 +217,17 @@ export async function getRenderablePublicForm(reference: PublicFormReference) {
   return {
     description: undefined,
     form,
-    successMessage: readConfirmationMessage(form) || 'Danke für deine Nachricht. Wir haben die Übermittlung erhalten.',
+    successMessage:
+      readConfirmationMessage(form) ||
+      'Danke für deine Nachricht. Wir haben die Übermittlung erhalten.',
   }
 }
 
 export async function submitConfiguredForm(reference: PublicFormReference, formData: FormData) {
+  if (String(formData.get('_website') ?? '').trim()) {
+    throw new Error('Form submission rejected.')
+  }
+
   const payload = await getPayloadClient()
   const form =
     reference.kind === 'preset'
@@ -222,14 +236,38 @@ export async function submitConfiguredForm(reference: PublicFormReference, formD
           collection: 'forms',
           id: reference.id,
         })
-  const entries = collectSubmissionEntries(form.fields ?? [], formData)
+  const entries = validatePublicFormSubmission(form.fields ?? [], formData)
+  const requestFingerprint = await getRequestFingerprint()
+  const recentSubmissions = await payload.find({
+    collection: 'form-submissions',
+    depth: 0,
+    limit: RATE_LIMIT_MAX_SUBMISSIONS,
+    overrideAccess: true,
+    where: {
+      and: [
+        { form: { equals: form.id } },
+        { requestFingerprint: { equals: requestFingerprint } },
+        {
+          createdAt: {
+            greater_than: new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString(),
+          },
+        },
+      ],
+    },
+  })
+
+  if (recentSubmissions.totalDocs >= RATE_LIMIT_MAX_SUBMISSIONS) {
+    throw new Error('Zu viele Formularanfragen. Bitte versuche es später erneut.')
+  }
 
   await payload.create({
     collection: 'form-submissions',
     data: {
       form: form.id,
+      requestFingerprint,
       submissionData: entries,
     },
+    overrideAccess: true,
   })
 
   return form
@@ -239,25 +277,73 @@ function readConfirmationMessage(form: Form) {
   return readLexicalText(form.confirmationMessage)
 }
 
-function collectSubmissionEntries(fields: NonNullable<Form['fields']>, formData: FormData) {
-  return fields.flatMap((field) => {
+export function validatePublicFormSubmission(
+  fields: NonNullable<Form['fields']>,
+  formData: FormData,
+) {
+  let totalLength = 0
+
+  const entries = fields.flatMap((field) => {
     if (field.blockType === 'message') {
       return []
     }
 
     const value = normalizeFieldValue(field as PublicInputField, formData)
+    const label = field.label || field.name
+
+    if (field.required && !value) {
+      throw new Error(`${label} ist ein Pflichtfeld.`)
+    }
+
     if (!value) {
       return []
     }
 
+    if (value.length > MAX_FIELD_LENGTH) {
+      throw new Error(`${label} ist zu lang.`)
+    }
+
+    if (field.blockType === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      throw new Error(`${label} enthält keine gültige E-Mail-Adresse.`)
+    }
+
+    if (field.blockType === 'number' && !Number.isFinite(Number(value))) {
+      throw new Error(`${label} enthält keine gültige Zahl.`)
+    }
+
+    if (
+      field.blockType === 'select' &&
+      !(field.options ?? []).some((option) => option.value === value)
+    ) {
+      throw new Error(`${label} enthält keine gültige Auswahl.`)
+    }
+
+    totalLength += value.length
+
     return [{ field: field.name, value }]
   })
+
+  if (totalLength > MAX_SUBMISSION_LENGTH) {
+    throw new Error('Formularinhalt ist zu lang.')
+  }
+
+  return entries
 }
 
 function normalizeFieldValue(field: PublicInputField, formData: FormData) {
   if (field.blockType === 'checkbox') {
-    return formData.has(field.name) ? 'Ja' : field.required ? 'Nein' : ''
+    return formData.has(field.name) ? 'Ja' : ''
   }
 
   return String(formData.get(field.name) ?? '').trim()
+}
+
+async function getRequestFingerprint() {
+  const requestHeaders = await headers()
+  const forwardedFor = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const clientAddress = forwardedFor || requestHeaders.get('x-real-ip') || 'unknown'
+  const userAgent = requestHeaders.get('user-agent') || 'unknown'
+  const secret = process.env.PAYLOAD_SECRET || 'trustred-local-dev-secret'
+
+  return createHmac('sha256', secret).update(`${clientAddress}\n${userAgent}`).digest('hex')
 }

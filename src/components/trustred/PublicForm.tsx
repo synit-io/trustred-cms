@@ -12,11 +12,17 @@ type Props = {
 export function PublicForm({ action, className, description, form, hideHeader = false }: Props) {
   return (
     <form action={action} className={className ? `${className} grid gap-6` : 'ff-card grid gap-6'}>
+      <label aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden">
+        Website
+        <input autoComplete="off" name="_website" tabIndex={-1} />
+      </label>
       {!hideHeader ? (
         <div>
           <p className="ff-kicker">Formular</p>
           <h2 className="text-[clamp(1.6rem,3vw,2.6rem)]">{form.title}</h2>
-          {description ? <p className="mt-3 text-sm leading-7 text-neutral-700">{description}</p> : null}
+          {description ? (
+            <p className="mt-3 text-sm leading-7 text-neutral-700">{description}</p>
+          ) : null}
         </div>
       ) : null}
 
@@ -26,7 +32,10 @@ export function PublicForm({ action, className, description, form, hideHeader = 
             const message = readLexicalText(field.message)
 
             return (
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700" key={`message-${index}`}>
+              <div
+                className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700"
+                key={`message-${index}`}
+              >
                 {message || 'Hinweis'}
               </div>
             )
@@ -55,7 +64,12 @@ export function PublicForm({ action, className, description, form, hideHeader = 
             return (
               <label className={widthClass} key={field.name}>
                 {label}
-                <select className="ff-input" defaultValue={field.defaultValue || ''} name={field.name} required={required}>
+                <select
+                  className="ff-input"
+                  defaultValue={field.defaultValue || ''}
+                  name={field.name}
+                  required={required}
+                >
                   {!field.defaultValue ? (
                     <option disabled value="">
                       {field.placeholder || 'Bitte auswählen'}
@@ -73,7 +87,10 @@ export function PublicForm({ action, className, description, form, hideHeader = 
 
           if (field.blockType === 'checkbox') {
             return (
-              <label className={`${widthClass} flex items-start gap-3 rounded-[1.1rem] border border-neutral-200 bg-neutral-50 px-4 py-4`} key={field.name}>
+              <label
+                className={`${widthClass} flex items-start gap-3 rounded-[1.1rem] border border-neutral-200 bg-neutral-50 px-4 py-4`}
+                key={field.name}
+              >
                 <input
                   className="mt-1 h-4 w-4 accent-[var(--brand-500)]"
                   defaultChecked={Boolean(field.defaultValue)}
@@ -95,7 +112,13 @@ export function PublicForm({ action, className, description, form, hideHeader = 
                 name={field.name}
                 placeholder={'placeholder' in field ? String(field.placeholder ?? '') : undefined}
                 required={required}
-                type={field.blockType === 'email' ? 'email' : field.blockType === 'number' ? 'number' : 'text'}
+                type={
+                  field.blockType === 'email'
+                    ? 'email'
+                    : field.blockType === 'number'
+                      ? 'number'
+                      : 'text'
+                }
               />
             </label>
           )

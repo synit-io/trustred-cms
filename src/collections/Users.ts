@@ -1,6 +1,24 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type Access, type CollectionConfig } from 'payload'
 
 import { hasRole, trustredRoles, userHasRole } from '@/access/hasRole'
+import type { User } from '@/payload-types'
+
+const canUpdateUser: Access = ({ req }) => {
+  const actor = req.user as User | null | undefined
+  if (userHasRole(actor, trustredRoles.superAdmin)) {
+    return true
+  }
+
+  if (!userHasRole(actor, trustredRoles.settings)) {
+    return false
+  }
+
+  return {
+    roles: {
+      not_in: ['super-admin'],
+    },
+  }
+}
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -12,9 +30,32 @@ export const Users: CollectionConfig = {
     create: hasRole(trustredRoles.settings),
     delete: hasRole(trustredRoles.superAdmin),
     read: hasRole(trustredRoles.settings),
-    update: hasRole(trustredRoles.settings),
+    update: canUpdateUser,
   },
   auth: true,
+  hooks: {
+    beforeChange: [
+      ({ data, originalDoc, req }) => {
+        const actor = req.user as User | null | undefined
+        if (!actor || userHasRole(actor, trustredRoles.superAdmin)) {
+          return data
+        }
+
+        const requestedRoles = Array.isArray(data.roles) ? data.roles : originalDoc?.roles
+        const changesSuperAdmin =
+          requestedRoles?.includes('super-admin') || originalDoc?.roles?.includes('super-admin')
+
+        if (changesSuperAdmin) {
+          throw new APIError(
+            'Only super admins may grant, remove, or modify super-admin accounts.',
+            403,
+          )
+        }
+
+        return data
+      },
+    ],
+  },
   fields: [
     {
       name: 'displayName',

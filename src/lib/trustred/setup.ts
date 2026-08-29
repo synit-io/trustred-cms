@@ -1,4 +1,6 @@
-import type { Payload } from 'payload'
+import { timingSafeEqual } from 'node:crypto'
+
+import { createLocalReq, type Payload, type PayloadRequest } from 'payload'
 
 import { trustredRoles, userHasRole } from '@/access/hasRole'
 import { defaultHomePage } from '@/lib/trustred/defaults'
@@ -23,12 +25,13 @@ export function normalizeSetupStep(
   return hasUsers ? 'site' : 'admin'
 }
 
-export async function countUsers(payload: Payload) {
+export async function countUsers(payload: Payload, req?: PayloadRequest) {
   const result = await payload.find({
     collection: 'users',
     depth: 0,
     limit: 1,
     overrideAccess: true,
+    req,
   })
 
   return result.totalDocs
@@ -99,10 +102,7 @@ export async function markSetupCompleted(payload: Payload, user: User) {
 }
 
 export async function createInitialAdmin(payload: Payload, formData: FormData) {
-  const existingUsers = await countUsers(payload)
-  if (existingUsers > 0) {
-    throw new Error('Initial admin can only be created while no users exist.')
-  }
+  verifySetupToken(String(formData.get('admin.setupToken') ?? ''))
 
   const email = String(formData.get('admin.email') ?? '')
     .trim()
@@ -114,16 +114,51 @@ export async function createInitialAdmin(payload: Payload, formData: FormData) {
     throw new Error('Name, E-Mail und Passwort sind Pflichtfelder.')
   }
 
-  return payload.create({
-    collection: 'users',
-    data: {
-      displayName,
-      email,
-      password,
-      roles: ['super-admin'],
-    },
-    overrideAccess: true,
-  }) as Promise<User>
+  const transactionID = await payload.db.beginTransaction({ behavior: 'immediate' })
+  if (transactionID === null) {
+    throw new Error('Database transactions must be enabled for initial setup.')
+  }
+
+  const req = await createLocalReq({ context: { initialAdminBootstrap: true } }, payload)
+  req.transactionID = transactionID
+
+  try {
+    const existingUsers = await countUsers(payload, req)
+    if (existingUsers > 0) {
+      throw new Error('Initial admin can only be created while no users exist.')
+    }
+
+    const user = (await payload.create({
+      collection: 'users',
+      data: {
+        displayName,
+        email,
+        password,
+        roles: ['super-admin'],
+      },
+      overrideAccess: true,
+      req,
+    })) as User
+
+    await payload.db.commitTransaction(transactionID)
+    return user
+  } catch (error) {
+    await payload.db.rollbackTransaction(transactionID)
+    throw error
+  }
+}
+
+function verifySetupToken(providedToken: string) {
+  const configuredToken = process.env.SETUP_TOKEN?.trim()
+  if (!configuredToken) {
+    throw new Error('SETUP_TOKEN must be configured before initial setup.')
+  }
+
+  const expected = Buffer.from(configuredToken)
+  const provided = Buffer.from(providedToken.trim())
+  if (expected.length !== provided.length || !timingSafeEqual(expected, provided)) {
+    throw new Error('Setup token is invalid.')
+  }
 }
 
 async function createUploadedHeroImage(payload: Payload, user: User, formData: FormData) {

@@ -350,6 +350,16 @@ export default async function SetupPage({ searchParams }: Props) {
                   type="password"
                 />
               </label>
+              <label>
+                Setup-Token
+                <input
+                  autoComplete="off"
+                  className="ff-input"
+                  name="admin.setupToken"
+                  required
+                  type="password"
+                />
+              </label>
             </div>
             <button className="ff-btn-accent w-fit" type="submit">
               Admin anlegen

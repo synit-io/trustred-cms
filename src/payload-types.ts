@@ -792,6 +792,7 @@ export interface FormSubmission {
         id?: string | null;
       }[]
     | null;
+  requestFingerprint?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1532,6 +1533,7 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
         value?: T;
         id?: T;
       };
+  requestFingerprint?: T;
   updatedAt?: T;
   createdAt?: T;
 }

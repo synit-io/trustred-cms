@@ -10,6 +10,7 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 
 process.env.TRUSTRED_ALLOW_DEMO_CONTENT ??= 'false'
+const BASELINE_MIGRATION_NAME = '20260828_201650_baseline'
 
 async function hasUsersTable() {
   const client = createClient({
@@ -23,6 +24,30 @@ async function hasUsersTable() {
     })
 
     return result.rows.length > 0
+  } finally {
+    client.close()
+  }
+}
+
+async function removeDevMigrationMarker() {
+  const client = createClient({
+    url: process.env.DATABASE_URL || `file:${path.resolve(process.cwd(), 'data/trustred.sqlite')}`,
+  })
+
+  try {
+    const migrationTable = await client.execute({
+      args: ['payload_migrations'],
+      sql: "select name from sqlite_master where type = 'table' and name = ?",
+    })
+
+    if (migrationTable.rows.length === 0) {
+      return
+    }
+
+    const result = await client.execute('delete from payload_migrations where batch = -1')
+    if (result.rowsAffected > 0) {
+      console.log('Removed Payload development-schema migration marker.')
+    }
   } finally {
     client.close()
   }
@@ -62,10 +87,16 @@ async function initializeFreshSchema() {
 }
 
 async function main() {
-  const migrationIndex = path.resolve(process.cwd(), 'migrations', 'index.js')
+  const bundledMigrationIndex = path.resolve(process.cwd(), 'migrations', 'index.js')
+  const sourceMigrationIndex = path.resolve(process.cwd(), 'src', 'migrations', 'index.ts')
+  const migrationIndex = existsSync(bundledMigrationIndex)
+    ? bundledMigrationIndex
+    : sourceMigrationIndex
+
+  const existingSchema = await hasUsersTable()
 
   if (!existsSync(migrationIndex)) {
-    if (!(await hasUsersTable())) {
+    if (!existingSchema) {
       await initializeFreshSchema()
       return
     }
@@ -90,8 +121,16 @@ async function main() {
     return
   }
 
+  const applicableMigrations = existingSchema
+    ? migrations.filter((migration) => migration.name !== BASELINE_MIGRATION_NAME)
+    : migrations
+
+  if (existingSchema) {
+    await removeDevMigrationMarker()
+  }
+
   const payload = await getPayload({ config })
-  await payload.db.migrate({ migrations })
+  await payload.db.migrate({ migrations: applicableMigrations })
   console.log('Migrations completed.')
 }
 

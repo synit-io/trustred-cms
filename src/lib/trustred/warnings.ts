@@ -62,6 +62,32 @@ const DWD_FORECAST_TIMEOUT_MS = 8000
 const REMOTE_ASSET_TIMEOUT_MS = 4000
 const WARNING_FEED_REVALIDATE_SECONDS = 900
 const FORECAST_REVALIDATE_SECONDS = 3600
+const allowedWarningHosts = ['dwd.de', 'warnung.bund.de'] as const
+
+function normalizeAllowedWarningUrl(value: string | null | undefined, provider: WarningProvider) {
+  const normalized = normalizeOptionalUrl(value)
+  if (!normalized) {
+    return undefined
+  }
+
+  try {
+    const url = new URL(normalized)
+    const allowedHost = provider === 'dwd' ? allowedWarningHosts[0] : allowedWarningHosts[1]
+    const hostname = url.hostname.toLowerCase()
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      (hostname !== allowedHost && !hostname.endsWith(`.${allowedHost}`))
+    ) {
+      return undefined
+    }
+
+    return url.toString()
+  } catch {
+    return undefined
+  }
+}
 
 async function fetchWithRetry(
   input: RequestInfo | URL,
@@ -77,6 +103,7 @@ async function fetchWithRetry(
     try {
       return await fetch(input, {
         ...requestInit,
+        redirect: 'error',
         signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : requestInit.signal,
       })
     } catch (error) {
@@ -150,17 +177,23 @@ function normalizeOptionalUrl(value?: string | null) {
 }
 
 function fallbackDwdWeatherSnapshot(config: WarningConfig): DwdWeatherSnapshot {
-  const forecastUrl = normalizeOptionalUrl(config.forecastUrl ?? config.sourceUrl)
+  const forecastUrl = normalizeAllowedWarningUrl(config.forecastUrl ?? config.sourceUrl, 'dwd')
 
   return {
     forecastUrl,
-    summary: 'DWD-Live-Daten konnten aktuell nicht geladen werden. Bitte die Detailansicht direkt beim DWD prüfen.',
-    tonightTomorrow: 'Die Seite zeigt ansonsten weiterhin die letzten verfügbaren Warninformationen aus dem DWD-Feed.',
+    summary:
+      'DWD-Live-Daten konnten aktuell nicht geladen werden. Bitte die Detailansicht direkt beim DWD prüfen.',
+    tonightTomorrow:
+      'Die Seite zeigt ansonsten weiterhin die letzten verfügbaren Warninformationen aus dem DWD-Feed.',
     updatedLabel: 'Nicht verfügbar',
     warningHeadline: `Warnlage ${String(config.regionLabel ?? 'DWD Region')} über den DWD prüfen.`,
-    warningMapUrl: normalizeOptionalUrl(config.warningMapUrl) ?? null,
-    weatherMapUrl: config.showWeatherMap ? normalizeOptionalUrl(config.weatherMapUrl) ?? null : null,
-    wildfireMapUrl: config.showWildfireMap ? normalizeOptionalUrl(config.wildfireMapUrl) ?? null : null,
+    warningMapUrl: normalizeAllowedWarningUrl(config.warningMapUrl, 'dwd') ?? null,
+    weatherMapUrl: config.showWeatherMap
+      ? (normalizeAllowedWarningUrl(config.weatherMapUrl, 'dwd') ?? null)
+      : null,
+    wildfireMapUrl: config.showWildfireMap
+      ? (normalizeAllowedWarningUrl(config.wildfireMapUrl, 'dwd') ?? null)
+      : null,
   }
 }
 
@@ -173,7 +206,7 @@ function parseDwdSnapshotFromHtml(html: string, config: WarningConfig): DwdWeath
     .filter(Boolean)
 
   return {
-    forecastUrl: normalizeOptionalUrl(config.forecastUrl ?? config.sourceUrl),
+    forecastUrl: normalizeAllowedWarningUrl(config.forecastUrl ?? config.sourceUrl, 'dwd'),
     summary: compactParagraph(preBlocks[0] ?? 'Derzeit liegen keine Detaildaten vor.', 260),
     tonightTomorrow: compactParagraph(
       preBlocks[1] ?? 'Bitte prüfen Sie die aktuelle Lage direkt beim DWD.',
@@ -185,20 +218,25 @@ function parseDwdSnapshotFromHtml(html: string, config: WarningConfig): DwdWeath
         `Aktuelle regionale Wetterentwicklung für ${String(config.regionLabel ?? 'DWD Region')}.`,
       220,
     ),
-    warningMapUrl: normalizeOptionalUrl(config.warningMapUrl) ?? null,
-    weatherMapUrl: config.showWeatherMap ? normalizeOptionalUrl(config.weatherMapUrl) ?? null : null,
-    wildfireMapUrl: config.showWildfireMap ? normalizeOptionalUrl(config.wildfireMapUrl) ?? null : null,
+    warningMapUrl: normalizeAllowedWarningUrl(config.warningMapUrl, 'dwd') ?? null,
+    weatherMapUrl: config.showWeatherMap
+      ? (normalizeAllowedWarningUrl(config.weatherMapUrl, 'dwd') ?? null)
+      : null,
+    wildfireMapUrl: config.showWildfireMap
+      ? (normalizeAllowedWarningUrl(config.wildfireMapUrl, 'dwd') ?? null)
+      : null,
   }
 }
 
 const getCachedRemoteAssetAvailability = unstable_cache(
   async (url: string) => {
-    if (!url) {
+    const safeUrl = normalizeAllowedWarningUrl(url, 'dwd')
+    if (!safeUrl) {
       return false
     }
 
     try {
-      const headResponse = await fetchWithRetry(url, {
+      const headResponse = await fetchWithRetry(safeUrl, {
         attempts: 2,
         headers: {
           'user-agent': DWD_USER_AGENT,
@@ -215,7 +253,7 @@ const getCachedRemoteAssetAvailability = unstable_cache(
         return true
       }
 
-      const fallbackResponse = await fetchWithRetry(url, {
+      const fallbackResponse = await fetchWithRetry(safeUrl, {
         attempts: 2,
         headers: {
           'user-agent': DWD_USER_AGENT,
@@ -238,11 +276,14 @@ const getCachedRemoteAssetAvailability = unstable_cache(
 
 const getCachedDwdWarnings = unstable_cache(
   async () => {
-    const response = await fetchWithRetry('https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json', {
-      attempts: 2,
-      next: { revalidate: WARNING_FEED_REVALIDATE_SECONDS },
-      timeoutMs: DWD_FORECAST_TIMEOUT_MS,
-    })
+    const response = await fetchWithRetry(
+      'https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json',
+      {
+        attempts: 2,
+        next: { revalidate: WARNING_FEED_REVALIDATE_SECONDS },
+        timeoutMs: DWD_FORECAST_TIMEOUT_MS,
+      },
+    )
 
     if (!response.ok) {
       throw new Error(`DWD warning request failed: ${response.status}`)
@@ -365,11 +406,14 @@ const getCachedDwdForecastSnapshot = unstable_cache(
 
 const getCachedNinaDashboard = unstable_cache(
   async (ars: string) => {
-    const response = await fetchWithRetry(`https://warnung.bund.de/api31/dashboard/${encodeURIComponent(ars)}.json`, {
-      attempts: 2,
-      next: { revalidate: WARNING_FEED_REVALIDATE_SECONDS },
-      timeoutMs: DWD_FORECAST_TIMEOUT_MS,
-    })
+    const response = await fetchWithRetry(
+      `https://warnung.bund.de/api31/dashboard/${encodeURIComponent(ars)}.json`,
+      {
+        attempts: 2,
+        next: { revalidate: WARNING_FEED_REVALIDATE_SECONDS },
+        timeoutMs: DWD_FORECAST_TIMEOUT_MS,
+      },
+    )
 
     if (!response.ok) {
       throw new Error(`NINA dashboard request failed: ${response.status}`)
@@ -399,11 +443,14 @@ const getCachedNinaDashboard = unstable_cache(
 
 const getCachedNinaDetail = unstable_cache(
   async (id: string) => {
-    const response = await fetchWithRetry(`https://warnung.bund.de/api31/warnings/${encodeURIComponent(id)}.json`, {
-      attempts: 2,
-      next: { revalidate: WARNING_FEED_REVALIDATE_SECONDS },
-      timeoutMs: DWD_FORECAST_TIMEOUT_MS,
-    })
+    const response = await fetchWithRetry(
+      `https://warnung.bund.de/api31/warnings/${encodeURIComponent(id)}.json`,
+      {
+        attempts: 2,
+        next: { revalidate: WARNING_FEED_REVALIDATE_SECONDS },
+        timeoutMs: DWD_FORECAST_TIMEOUT_MS,
+      },
+    )
 
     if (!response.ok) {
       return null
@@ -438,56 +485,66 @@ async function getDwdSnapshot(config: WarningConfig): Promise<WarningSnapshot> {
   const selectedStateSet = new Set(selectedStates)
   const entryKeys = new Set<string>()
 
-  const entries = Object.entries(payload.warnings ?? {}).flatMap(([regionId, warnings]) => {
-    const state = String(warnings?.[0]?.state ?? '').trim()
-    const includeByRegionId = selectedIdSet.has(regionId)
-    const includeByState = state ? selectedStateSet.has(state) : false
+  const entries = Object.entries(payload.warnings ?? {})
+    .flatMap(([regionId, warnings]) => {
+      const state = String(warnings?.[0]?.state ?? '').trim()
+      const includeByRegionId = selectedIdSet.has(regionId)
+      const includeByState = state ? selectedStateSet.has(state) : false
 
-    if (!includeByRegionId && !includeByState) {
-      return []
-    }
-
-    return warnings.flatMap((entry) => {
-      const entryKey = [
-        String(entry.headline ?? entry.event ?? ''),
-        stripHtml(entry.description || entry.instruction || entry.event || ''),
-        String(entry.start ?? ''),
-        String(entry.end ?? ''),
-      ].join(':')
-
-      if (entryKeys.has(entryKey)) {
+      if (!includeByRegionId && !includeByState) {
         return []
       }
 
-      entryKeys.add(entryKey)
+      return warnings.flatMap((entry) => {
+        const entryKey = [
+          String(entry.headline ?? entry.event ?? ''),
+          stripHtml(entry.description || entry.instruction || entry.event || ''),
+          String(entry.start ?? ''),
+          String(entry.end ?? ''),
+        ].join(':')
 
-      return {
-        description: stripHtml(entry.description || entry.instruction || entry.event || ''),
-        endsAt: entry.end ? new Date(entry.end).toISOString() : undefined,
-        headline: String(entry.headline ?? entry.event ?? 'DWD Warnung'),
-        instruction: stripHtml(entry.instruction ?? ''),
-        provider: 'dwd' as const,
-        severity: severityFromNumber(entry.level),
-        source: String(entry.regionName ?? entry.state ?? config.regionLabel ?? 'DWD'),
-        startsAt: entry.start ? new Date(entry.start).toISOString() : undefined,
-        tag: String(entry.event ?? '').trim() || undefined,
-      }
+        if (entryKeys.has(entryKey)) {
+          return []
+        }
+
+        entryKeys.add(entryKey)
+
+        return {
+          description: stripHtml(entry.description || entry.instruction || entry.event || ''),
+          endsAt: entry.end ? new Date(entry.end).toISOString() : undefined,
+          headline: String(entry.headline ?? entry.event ?? 'DWD Warnung'),
+          instruction: stripHtml(entry.instruction ?? ''),
+          provider: 'dwd' as const,
+          severity: severityFromNumber(entry.level),
+          source: String(entry.regionName ?? entry.state ?? config.regionLabel ?? 'DWD'),
+          startsAt: entry.start ? new Date(entry.start).toISOString() : undefined,
+          tag: String(entry.event ?? '').trim() || undefined,
+        }
+      })
     })
-  }).sort((left, right) => {
-    const leftStart = left.startsAt ? new Date(left.startsAt).getTime() : 0
-    const rightStart = right.startsAt ? new Date(right.startsAt).getTime() : 0
-    return rightStart - leftStart
-  })
+    .sort((left, right) => {
+      const leftStart = left.startsAt ? new Date(left.startsAt).getTime() : 0
+      const rightStart = right.startsAt ? new Date(right.startsAt).getTime() : 0
+      return rightStart - leftStart
+    })
 
-  const forecastUrl = normalizeOptionalUrl(config.forecastUrl ?? config.sourceUrl) ?? ''
-  const warningMapUrl = normalizeOptionalUrl(config.warningMapUrl) ?? ''
-  const weatherMapUrl = config.showWeatherMap ? normalizeOptionalUrl(config.weatherMapUrl) ?? '' : ''
-  const wildfireMapUrl = config.showWildfireMap ? normalizeOptionalUrl(config.wildfireMapUrl) ?? '' : ''
+  const forecastUrl =
+    normalizeAllowedWarningUrl(config.forecastUrl ?? config.sourceUrl, 'dwd') ?? ''
+  const warningMapUrl = normalizeAllowedWarningUrl(config.warningMapUrl, 'dwd') ?? ''
+  const weatherMapUrl = config.showWeatherMap
+    ? (normalizeAllowedWarningUrl(config.weatherMapUrl, 'dwd') ?? '')
+    : ''
+  const wildfireMapUrl = config.showWildfireMap
+    ? (normalizeAllowedWarningUrl(config.wildfireMapUrl, 'dwd') ?? '')
+    : ''
+  const sourceUrl =
+    normalizeAllowedWarningUrl(config.sourceUrl ?? config.forecastUrl, 'dwd') ??
+    'https://www.dwd.de'
 
   const dwdWeather = await getCachedDwdForecastSnapshot(
     forecastUrl,
     String(config.regionLabel ?? 'DWD Region'),
-    normalizeOptionalUrl(config.sourceUrl ?? config.forecastUrl) ?? 'https://www.dwd.de',
+    sourceUrl,
     warningMapUrl,
     weatherMapUrl,
     wildfireMapUrl,
@@ -497,11 +554,19 @@ async function getDwdSnapshot(config: WarningConfig): Promise<WarningSnapshot> {
     dwdWeather,
     entries,
     fetchedAt: new Date().toISOString(),
-    note: entries.length === 0 ? 'Der Feed ist erreichbar, enthält derzeit aber keine passenden Warnungen.' : undefined,
+    note:
+      entries.length === 0
+        ? 'Der Feed ist erreichbar, enthält derzeit aber keine passenden Warnungen.'
+        : undefined,
     provider: 'dwd',
     regionLabel: String(config.regionLabel ?? 'DWD Region'),
-    sourceUrl: normalizeOptionalUrl(config.sourceUrl ?? config.forecastUrl) ?? 'https://www.dwd.de',
-    sourceState: entries.length === 0 ? 'empty' : dwdWeather.updatedLabel === 'Nicht verfügbar' ? 'degraded' : 'ok',
+    sourceUrl,
+    sourceState:
+      entries.length === 0
+        ? 'empty'
+        : dwdWeather.updatedLabel === 'Nicht verfügbar'
+          ? 'degraded'
+          : 'ok',
     staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
     status: dwdWeather.updatedLabel === 'Nicht verfügbar' ? 'fallback' : 'live',
     updatedAt: payload.time ? new Date(payload.time).toISOString() : new Date().toISOString(),
@@ -517,7 +582,8 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
       note: 'Es ist keine ARS-Region hinterlegt.',
       provider: 'nina',
       regionLabel: String(config.regionLabel ?? 'NINA Region'),
-      sourceUrl: normalizeOptionalUrl(config.sourceUrl) ?? 'https://warnung.bund.de/meldungen',
+      sourceUrl:
+        normalizeAllowedWarningUrl(config.sourceUrl, 'nina') ?? 'https://warnung.bund.de/meldungen',
       sourceState: 'degraded',
       staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
       status: 'fallback',
@@ -549,7 +615,12 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
 
   const entries = detailedEntries
     .filter((entry) => {
-      const entryKey = [entry.headline, entry.description, entry.startsAt ?? '', entry.tag ?? ''].join(':')
+      const entryKey = [
+        entry.headline,
+        entry.description,
+        entry.startsAt ?? '',
+        entry.tag ?? '',
+      ].join(':')
       if (seenEntryKeys.has(entryKey)) {
         return false
       }
@@ -565,10 +636,14 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
   return {
     entries,
     fetchedAt: new Date().toISOString(),
-    note: entries.length === 0 ? 'NINA ist erreichbar, liefert aktuell aber keine passenden Warnmeldungen.' : undefined,
+    note:
+      entries.length === 0
+        ? 'NINA ist erreichbar, liefert aktuell aber keine passenden Warnmeldungen.'
+        : undefined,
     provider: 'nina',
     regionLabel: String(config.regionLabel ?? 'NINA Region'),
-    sourceUrl: normalizeOptionalUrl(config.sourceUrl) ?? 'https://warnung.bund.de/meldungen',
+    sourceUrl:
+      normalizeAllowedWarningUrl(config.sourceUrl, 'nina') ?? 'https://warnung.bund.de/meldungen',
     sourceState: entries.length === 0 ? 'empty' : 'ok',
     staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
     status: 'live',
@@ -576,7 +651,9 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
   }
 }
 
-export async function getWarningSnapshotFromConfig(config: WarningConfig): Promise<WarningSnapshot | null> {
+export async function getWarningSnapshotFromConfig(
+  config: WarningConfig,
+): Promise<WarningSnapshot | null> {
   try {
     if (config.provider === 'dwd') {
       return getDwdSnapshot(config)
@@ -589,10 +666,14 @@ export async function getWarningSnapshotFromConfig(config: WarningConfig): Promi
     return {
       entries: [],
       fetchedAt: new Date().toISOString(),
-      note: error instanceof Error ? error.message : 'Warnungsdaten konnten aktuell nicht geladen werden.',
+      note:
+        error instanceof Error
+          ? error.message
+          : 'Warnungsdaten konnten aktuell nicht geladen werden.',
       provider: config.provider,
       regionLabel: String(config.regionLabel ?? 'Warnregion'),
-      sourceUrl: normalizeOptionalUrl(config.sourceUrl ?? config.forecastUrl) ?? '',
+      sourceUrl:
+        normalizeAllowedWarningUrl(config.sourceUrl ?? config.forecastUrl, config.provider) ?? '',
       sourceState: 'degraded',
       staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
       status: 'error',
