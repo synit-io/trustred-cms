@@ -10,6 +10,8 @@ import 'dotenv/config'
 
 process.env.DATABASE_URL ??= `file:${join(tmpdir(), `trustred-playwright-${process.pid}.sqlite`)}`
 process.env.PAYLOAD_SECRET ??= 'trustred-playwright-secret'
+process.env.SETUP_TOKEN ??= 'trustred-playwright-setup-token'
+process.env.SITE_TIMEZONE ??= 'Europe/Berlin'
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -45,8 +47,10 @@ export default defineConfig({
       ...process.env,
       DATABASE_URL: process.env.DATABASE_URL,
       PAYLOAD_SECRET: process.env.PAYLOAD_SECRET,
+      SETUP_TOKEN: process.env.SETUP_TOKEN,
+      SITE_TIMEZONE: process.env.SITE_TIMEZONE,
     },
-    reuseExistingServer: true,
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === 'true',
     url: 'http://localhost:3000',
   },
 })

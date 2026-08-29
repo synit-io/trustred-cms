@@ -15,6 +15,6 @@ test.describe('Frontend', () => {
 
     const heading = page.locator('h1').first()
 
-    await expect(heading).toContainText('Einsatzbereit')
+    await expect(heading).toContainText('Startseite einrichten')
   })
 })
