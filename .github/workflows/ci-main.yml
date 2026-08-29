@@ -57,6 +57,7 @@ jobs:
       - name: Build production application
         env:
           DATABASE_URL: file:./data/ci.sqlite
+          NODE_ENV: production
         run: |
           mkdir -p data
           npm run migrate
