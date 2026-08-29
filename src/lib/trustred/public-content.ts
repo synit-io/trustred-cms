@@ -1,5 +1,6 @@
 import type { Media } from '@/payload-types'
 import { toPublicSlug } from '@/lib/trustred/slugify'
+import { getSiteTimeZone, isSameSiteDate } from '@/lib/trustred/time'
 
 export const postCategoryLabels: Record<string, string> = {
   ausbildung: 'Ausbildung',
@@ -17,7 +18,9 @@ export const eventTypeLabels: Record<string, string> = {
 }
 
 export function getPostCategoryBadgeClass(category?: string | null) {
-  const normalized = String(category ?? '').trim().toLowerCase()
+  const normalized = String(category ?? '')
+    .trim()
+    .toLowerCase()
 
   if (normalized.includes('einsatz')) return 'ff-pill ff-pill--warning'
   if (normalized.includes('jugend')) return 'ff-pill ff-pill--info'
@@ -26,7 +29,9 @@ export function getPostCategoryBadgeClass(category?: string | null) {
 }
 
 export function getEventTypeBadgeClass(type?: string | null) {
-  const normalized = String(type ?? '').trim().toLowerCase()
+  const normalized = String(type ?? '')
+    .trim()
+    .toLowerCase()
 
   if (normalized.includes('oeffentlich')) return 'ff-pill ff-pill--brand'
   if (normalized.includes('jugend')) return 'ff-pill ff-pill--info'
@@ -38,7 +43,9 @@ export function getDateBadgeClass() {
   return 'ff-pill ff-pill--published'
 }
 
-export function getStatusBadgeClass(tone: 'brand' | 'info' | 'neutral' | 'published' | 'team' | 'warning') {
+export function getStatusBadgeClass(
+  tone: 'brand' | 'info' | 'neutral' | 'published' | 'team' | 'warning',
+) {
   return `ff-pill ff-pill--${tone}`
 }
 
@@ -46,6 +53,7 @@ const dateFormat = new Intl.DateTimeFormat('de-DE', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
+  timeZone: getSiteTimeZone(),
 })
 
 const dateTimeFormat = new Intl.DateTimeFormat('de-DE', {
@@ -54,11 +62,13 @@ const dateTimeFormat = new Intl.DateTimeFormat('de-DE', {
   minute: '2-digit',
   month: '2-digit',
   year: 'numeric',
+  timeZone: getSiteTimeZone(),
 })
 
 const monthYearFormat = new Intl.DateTimeFormat('de-DE', {
   month: 'long',
   year: 'numeric',
+  timeZone: getSiteTimeZone(),
 })
 
 export function formatDate(value?: string | null) {
@@ -93,10 +103,15 @@ export function formatDateTimeRange(start?: string | null, end?: string | null) 
     return formatDateTime(start)
   }
 
-  const sameDay = startDate.toDateString() === endDate.toDateString()
+  const sameDay = isSameSiteDate(startDate, endDate)
 
   if (sameDay) {
-    return `${dateFormat.format(startDate)} · ${startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
+    const timeOptions = {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: getSiteTimeZone(),
+    } as const
+    return `${dateFormat.format(startDate)} · ${startDate.toLocaleTimeString('de-DE', timeOptions)} - ${endDate.toLocaleTimeString('de-DE', timeOptions)}`
   }
 
   return `${formatDateTime(start)} - ${formatDateTime(end)}`
@@ -150,6 +165,8 @@ export function shouldShowImagePlaceholder(item?: unknown | null) {
   }
 
   return Boolean(
-    'showImagePlaceholder' in item ? (item as { showImagePlaceholder?: boolean | null }).showImagePlaceholder : false,
+    'showImagePlaceholder' in item
+      ? (item as { showImagePlaceholder?: boolean | null }).showImagePlaceholder
+      : false,
   )
 }

@@ -11,6 +11,7 @@ import {
   defaultSiteSettings,
   fallbackFeedData,
 } from '@/lib/trustred/defaults'
+import { sanitizeHtmlFragment } from '@/lib/trustred/html'
 import {
   pageBlockLabels,
   type PageBlockType,
@@ -19,6 +20,7 @@ import {
 import { ensureDefaultPublicForms } from '@/lib/trustred/public-forms'
 import { getBuiltInWarningPresets } from '@/lib/trustred/warning-presets'
 import { toPublicSlug } from '@/lib/trustred/slugify'
+import { formatSiteDateTimeInput, parseSiteDateTime } from '@/lib/trustred/time'
 import { parseYouTubeVideoId } from '@/lib/trustred/youtube'
 import type { Media, Page, SiteSetting, User, WarningPreset } from '@/payload-types'
 
@@ -231,7 +233,7 @@ function toOptionalString(value: FormDataEntryValue | null) {
 function toDateTime(value: FormDataEntryValue | null) {
   const normalized = String(value ?? '').trim()
   if (!normalized) return undefined
-  return new Date(normalized).toISOString()
+  return parseSiteDateTime(normalized)
 }
 
 function parseJson<T = unknown>(value: FormDataEntryValue | null, fallback: T): T {
@@ -436,9 +438,7 @@ async function parseEquipmentCompartments(payload: Payload, user: User, formData
     const code = String(formData.get(`compartments.${index}.code`) ?? '').trim()
     const title = String(formData.get(`compartments.${index}.title`) ?? '').trim()
     const description = toOptionalString(formData.get(`compartments.${index}.description`))
-    const contents = parseLines(formData.get(`compartments.${index}.contents`)).map((label) => ({
-      label,
-    }))
+    const contents = parseLines(formData.get(`compartments.${index}.contents`))
 
     if (!code || !title) {
       continue
@@ -790,7 +790,7 @@ async function parsePageLayout(
       block: {
         blockName,
         blockType,
-        html: String(formData.get(`${prefix}.html`) ?? '').trim(),
+        html: sanitizeHtmlFragment(String(formData.get(`${prefix}.html`) ?? '').trim()),
         id,
         label: String(formData.get(`${prefix}.label`) ?? '').trim(),
       },
@@ -933,10 +933,7 @@ export function toFormValue(fieldType: string, value: unknown) {
 
   if (fieldType === 'datetime-local') {
     if (!value) return ''
-    const date = new Date(String(value))
-    return Number.isNaN(date.getTime())
-      ? ''
-      : new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+    return formatSiteDateTimeInput(String(value))
   }
 
   if (fieldType === 'json') {

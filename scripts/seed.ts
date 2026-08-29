@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { getPayload } from 'payload'
 
+import type { Media } from '../src/payload-types'
 import config from '../src/payload.config'
 import {
   defaultHomePage,
@@ -16,15 +17,9 @@ import {
 import { getBuiltInWarningPresets } from '../src/lib/trustred/warning-presets'
 import { ensureDefaultPublicForms } from '../src/lib/trustred/public-forms'
 
-const args = new Set(process.argv.slice(2))
-const emptyMode = args.has('--empty')
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const demoImageDir = path.resolve(dirname, '..', 'public', 'demo-seed-images')
 const localMediaDir = path.resolve(dirname, '..', 'media')
-
-if (!emptyMode) {
-  process.env.TRUSTRED_ALLOW_DEMO_CONTENT = 'true'
-}
 
 const starterLookupField = {
   crew: 'name',
@@ -65,7 +60,16 @@ const demoMediaDefinitions = {
 
 type DemoMediaKey = keyof typeof demoMediaDefinitions
 type DemoMediaMap = Record<DemoMediaKey, number | string>
-type BasePage = typeof defaultHomePage | (typeof defaultManagedPages)[number]
+type BasePage = {
+  layout: readonly Record<string, unknown>[]
+  navigationLabel?: string
+  navigationOrder?: number
+  showInNavigation?: boolean
+  slug: string
+  summary?: string
+  title: string
+}
+type StarterRecord = Record<string, unknown>
 
 const cleanSiteSettings = {
   ...defaultSiteSettings,
@@ -464,9 +468,9 @@ const cleanManagedPages = [
 function hasS3Storage() {
   return Boolean(
     process.env.S3_BUCKET?.trim() &&
-      process.env.S3_REGION?.trim() &&
-      process.env.S3_ACCESS_KEY_ID?.trim() &&
-      process.env.S3_SECRET_ACCESS_KEY?.trim(),
+    process.env.S3_REGION?.trim() &&
+    process.env.S3_ACCESS_KEY_ID?.trim() &&
+    process.env.S3_SECRET_ACCESS_KEY?.trim(),
   )
 }
 
@@ -579,7 +583,7 @@ async function ensureDemoMedia(
         continue
       }
 
-      const updatedMedia = await payload.update({
+      const updatedMedia = (await payload.update({
         collection: 'media',
         id: existingMedia.id,
         data: {
@@ -592,14 +596,14 @@ async function ensureDemoMedia(
           name: definition.fileName,
           size: data.byteLength,
         },
-      } as never)
+      } as never)) as unknown as Media
 
       await ensureLocalDemoMediaFiles(updatedMedia, filePath)
 
       continue
     }
 
-    const media = await payload.create({
+    const media = (await payload.create({
       collection: 'media',
       data: {
         alt: definition.alt,
@@ -611,7 +615,7 @@ async function ensureDemoMedia(
         name: definition.fileName,
         size: data.byteLength,
       },
-    } as never)
+    } as never)) as unknown as Media
 
     result[key] = media.id
     await ensureLocalDemoMediaFiles(media, filePath)
@@ -696,7 +700,7 @@ async function ensureHomePage(
       data: {
         layout: nextHomePage.layout,
       },
-    })
+    } as never)
 
     return
   }
@@ -707,7 +711,7 @@ async function ensureHomePage(
       ...withHomeHeroImage(defaultHomePage, mediaIds),
       _status: 'published',
     },
-  })
+  } as never)
 }
 
 function withStarterPageRelationships(
@@ -724,14 +728,14 @@ function withStarterPageRelationships(
       if (block.blockType === 'tech-overview') {
         return {
           ...block,
-          featuredEquipment: block.featuredEquipment ?? featuredEquipmentId,
+          featuredEquipment: featuredEquipmentId,
         }
       }
 
       if (block.blockType === 'tech-details') {
         return {
           ...block,
-          equipment: block.equipment ?? featuredEquipmentId,
+          equipment: featuredEquipmentId,
         }
       }
 
@@ -770,7 +774,7 @@ async function ensureManagedPages(payload: Awaited<ReturnType<typeof getPayload>
         ...pageData,
         _status: 'published',
       },
-    })
+    } as never)
   }
 }
 
@@ -795,7 +799,7 @@ async function ensurePage(payload: Awaited<ReturnType<typeof getPayload>>, page:
       ...page,
       _status: 'published',
     },
-  })
+  } as never)
 }
 
 async function ensureCleanBasePages(payload: Awaited<ReturnType<typeof getPayload>>) {
@@ -806,15 +810,12 @@ async function ensureCleanBasePages(payload: Awaited<ReturnType<typeof getPayloa
   }
 }
 
-function getStarterSeedData(
-  collection: keyof typeof fallbackFeedData,
-  item: (typeof fallbackFeedData)[keyof typeof fallbackFeedData][number],
-) {
+function getStarterSeedData(collection: keyof typeof fallbackFeedData, item: StarterRecord) {
   if (collection === 'posts') {
     return {
       ...item,
       _status: 'published',
-      content: 'content' in item ? item.content : (item.excerpt ?? item.title),
+      content: item.content ?? item.excerpt ?? item.title,
     }
   }
 
@@ -823,12 +824,10 @@ function getStarterSeedData(
 
 function withDemoMedia(
   collection: keyof typeof fallbackFeedData,
-  item: (typeof fallbackFeedData)[keyof typeof fallbackFeedData][number],
+  item: StarterRecord,
   mediaIds: DemoMediaMap,
 ) {
-  const lookupValue = String(
-    (item as Record<string, unknown>)[starterLookupField[collection]] ?? '',
-  )
+  const lookupValue = String(item[starterLookupField[collection]] ?? '')
 
   if (collection === 'posts') {
     const postImages: Record<string, number | string> = {
@@ -876,7 +875,7 @@ function withDemoMedia(
       ...item,
       compartments: Array.isArray(item.compartments)
         ? item.compartments.map((compartment) => ({
-            ...compartment,
+            ...(compartment as StarterRecord),
             image: mediaIds.equipment,
             showImagePlaceholder: false,
           }))
@@ -909,26 +908,28 @@ async function seedCollectionIfEmpty(
 
   if (existing.docs.length === 0) {
     for (const item of fallbackFeedData[collection]) {
+      const record = item as unknown as StarterRecord
       await payload.create({
         collection,
-        data: getStarterSeedData(collection, withDemoMedia(collection, item, mediaIds)),
-      })
+        data: getStarterSeedData(collection, withDemoMedia(collection, record, mediaIds)),
+      } as never)
     }
 
     return
   }
 
   for (const item of fallbackFeedData[collection]) {
-    const lookupValue = String((item as Record<string, unknown>)[lookupField] ?? '')
+    const record = item as unknown as StarterRecord
+    const lookupValue = String(record[lookupField] ?? '')
     const match = existing.docs.find(
-      (doc) => String((doc as Record<string, unknown>)[lookupField] ?? '') === lookupValue,
+      (doc) => String((doc as unknown as StarterRecord)[lookupField] ?? '') === lookupValue,
     )
 
     if (!match) {
       await payload.create({
         collection,
-        data: getStarterSeedData(collection, withDemoMedia(collection, item, mediaIds)),
-      })
+        data: getStarterSeedData(collection, withDemoMedia(collection, record, mediaIds)),
+      } as never)
 
       continue
     }
@@ -936,12 +937,16 @@ async function seedCollectionIfEmpty(
     await payload.update({
       collection,
       id: match.id,
-      data: getStarterSeedData(collection, withDemoMedia(collection, item, mediaIds)),
-    })
+      data: getStarterSeedData(collection, withDemoMedia(collection, record, mediaIds)),
+    } as never)
   }
 }
 
-async function main() {
+export async function seedContent({ emptyMode = false }: { emptyMode?: boolean } = {}) {
+  if (!emptyMode) {
+    process.env.TRUSTRED_ALLOW_DEMO_CONTENT = 'true'
+  }
+
   const payload = await getPayload({ config })
 
   await ensureGlobal(payload, emptyMode ? cleanSiteSettings : defaultSiteSettings)
@@ -968,4 +973,9 @@ async function main() {
   console.log('Seed completed with starter content.')
 }
 
-void main()
+const isDirectExecution =
+  process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
+
+if (isDirectExecution) {
+  void seedContent({ emptyMode: new Set(process.argv.slice(2)).has('--empty') })
+}

@@ -1,9 +1,21 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
-import { editorialCollections, getEditorialPermissions, isEditorialCollectionSlug, loadCollectionDocs, requireEditorialContext } from '@/lib/trustred/editorial'
+import {
+  editorialCollections,
+  getEditorialPermissions,
+  isEditorialCollectionSlug,
+  loadCollectionDocs,
+  requireEditorialContext,
+} from '@/lib/trustred/editorial'
 import { normalizePublicPath, resolvePublicSlug } from '@/lib/trustred/slugify'
-import { getEquipmentPath, getEventPath, getFaqPath, getPostPath } from '@/lib/trustred/public-content'
+import {
+  getEquipmentPath,
+  getEventPath,
+  getFaqPath,
+  getPostPath,
+} from '@/lib/trustred/public-content'
+import { getSiteTimeZone } from '@/lib/trustred/time'
 
 type Props = {
   params: Promise<{
@@ -23,6 +35,7 @@ function formatUpdatedAt(value: unknown) {
   return new Intl.DateTimeFormat('de-DE', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: getSiteTimeZone(),
   }).format(date)
 }
 
@@ -90,7 +103,13 @@ export default async function ManageCollectionPage({ params, searchParams }: Pro
 
   const filteredDocs = docs.filter((doc) => {
     if (query) {
-      const haystack = [getDocLabel(doc, config.titleField), doc.slug, doc.id, doc.category, doc.location]
+      const haystack = [
+        getDocLabel(doc, config.titleField),
+        doc.slug,
+        doc.id,
+        doc.category,
+        doc.location,
+      ]
         .map((entry) => String(entry ?? ''))
         .join(' ')
         .toLowerCase()
@@ -130,10 +149,18 @@ export default async function ManageCollectionPage({ params, searchParams }: Pro
           Neuen Eintrag anlegen
         </Link>
       </section>
-      <form className="ff-card grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem_auto] md:items-end" method="get">
+      <form
+        className="ff-card grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem_auto] md:items-end"
+        method="get"
+      >
         <label>
           Suche
-          <input className="ff-input" defaultValue={query} name="q" placeholder="Titel, Slug, ID, Kategorie, Ort" />
+          <input
+            className="ff-input"
+            defaultValue={query}
+            name="q"
+            placeholder="Titel, Slug, ID, Kategorie, Ort"
+          />
         </label>
         <label>
           Filter
@@ -154,47 +181,65 @@ export default async function ManageCollectionPage({ params, searchParams }: Pro
           <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-neutral-200">
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">Titel</th>
+                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">
+                  Titel
+                </th>
                 <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">ID</th>
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">Aktualisiert</th>
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">Status</th>
+                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">
+                  Aktualisiert
+                </th>
+                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">
+                  Status
+                </th>
                 <th className="py-3 font-headline text-xs uppercase tracking-[0.08em]">Aktion</th>
               </tr>
             </thead>
             <tbody>
               {filteredDocs.map((doc) => {
                 const publicHref = getDocPublicHref(collectionSlug, doc)
-                const statusLabel =
-                  doc._status ? String(doc._status) : doc.visibility ? String(doc.visibility) : doc.isPublic === false ? 'intern' : 'aktiv'
+                const statusLabel = doc._status
+                  ? String(doc._status)
+                  : doc.visibility
+                    ? String(doc.visibility)
+                    : doc.isPublic === false
+                      ? 'intern'
+                      : 'aktiv'
 
                 return (
-                <tr className="border-b border-neutral-100" key={String(doc.id)}>
-                  <td className="py-3 pr-4">
-                    <div className="grid gap-1">
-                      <span>{getDocLabel(doc, config.titleField)}</span>
-                      {publicHref ? (
-                        <Link className="text-xs text-neutral-500 underline" href={publicHref} target="_blank">
-                          Öffentliche Ansicht
+                  <tr className="border-b border-neutral-100" key={String(doc.id)}>
+                    <td className="py-3 pr-4">
+                      <div className="grid gap-1">
+                        <span>{getDocLabel(doc, config.titleField)}</span>
+                        {publicHref ? (
+                          <Link
+                            className="text-xs text-neutral-500 underline"
+                            href={publicHref}
+                            target="_blank"
+                          >
+                            Öffentliche Ansicht
+                          </Link>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4 text-neutral-500">{String(doc.id)}</td>
+                    <td className="py-3 pr-4 text-neutral-500">{formatUpdatedAt(doc.updatedAt)}</td>
+                    <td className="py-3 pr-4 text-neutral-500">{statusLabel}</td>
+                    <td className="py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          className="ff-btn-ghost"
+                          href={`/manage/content/${collectionSlug}/${doc.id}`}
+                        >
+                          Bearbeiten
                         </Link>
-                      ) : null}
-                    </div>
-                  </td>
-                  <td className="py-3 pr-4 text-neutral-500">{String(doc.id)}</td>
-                  <td className="py-3 pr-4 text-neutral-500">{formatUpdatedAt(doc.updatedAt)}</td>
-                  <td className="py-3 pr-4 text-neutral-500">{statusLabel}</td>
-                  <td className="py-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Link className="ff-btn-ghost" href={`/manage/content/${collectionSlug}/${doc.id}`}>
-                        Bearbeiten
-                      </Link>
-                      {publicHref ? (
-                        <Link className="ff-btn-ghost" href={publicHref} target="_blank">
-                          Ansehen
-                        </Link>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
+                        {publicHref ? (
+                          <Link className="ff-btn-ghost" href={publicHref} target="_blank">
+                            Ansehen
+                          </Link>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
                 )
               })}
               {filteredDocs.length === 0 ? (

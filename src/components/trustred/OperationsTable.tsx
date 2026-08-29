@@ -4,6 +4,7 @@ import { OperationTypeBadge } from '@/components/trustred/OperationTypeBadge'
 import { getOperationDetailPath } from '@/lib/trustred/operations'
 import { getOperationMeta } from '@/lib/trustred/operations'
 import { getStatusBadgeClass } from '@/lib/trustred/public-content'
+import { getSiteTimeZone } from '@/lib/trustred/time'
 import type { Operation } from '@/payload-types'
 
 const dateTimeFormat = new Intl.DateTimeFormat('de-DE', {
@@ -12,6 +13,7 @@ const dateTimeFormat = new Intl.DateTimeFormat('de-DE', {
   minute: '2-digit',
   month: '2-digit',
   year: 'numeric',
+  timeZone: getSiteTimeZone(),
 })
 
 export function OperationsTable({ operations }: { operations: Operation[] }) {
@@ -29,7 +31,10 @@ export function OperationsTable({ operations }: { operations: Operation[] }) {
             <article className={`ff-card ${meta.rowClass}`} key={operationKey}>
               <div className="flex flex-wrap items-center gap-2">
                 {detailsHref ? (
-                  <Link className={`${getStatusBadgeClass('brand')} hover:text-[var(--brand-700)]`} href={detailsHref}>
+                  <Link
+                    className={`${getStatusBadgeClass('brand')} hover:text-[var(--brand-700)]`}
+                    href={detailsHref}
+                  >
                     {operation.operationNumber}
                   </Link>
                 ) : (
@@ -44,7 +49,10 @@ export function OperationsTable({ operations }: { operations: Operation[] }) {
               </p>
               <p className="mt-3 text-sm leading-6 text-neutral-700">{operation.summary}</p>
               {detailsHref ? (
-                <Link className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-500)] hover:text-[var(--brand-700)]" href={detailsHref}>
+                <Link
+                  className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-500)] hover:text-[var(--brand-700)]"
+                  href={detailsHref}
+                >
                   Details
                 </Link>
               ) : null}
@@ -81,7 +89,10 @@ export function OperationsTable({ operations }: { operations: Operation[] }) {
                 <tr className={meta.rowClass} key={operationKey}>
                   <th scope="row">
                     {detailsHref ? (
-                      <Link className="font-semibold text-[var(--brand-500)] hover:text-[var(--brand-700)]" href={detailsHref}>
+                      <Link
+                        className="font-semibold text-[var(--brand-500)] hover:text-[var(--brand-700)]"
+                        href={detailsHref}
+                      >
                         {operation.operationNumber}
                       </Link>
                     ) : (
@@ -99,7 +110,10 @@ export function OperationsTable({ operations }: { operations: Operation[] }) {
                   <td>{operation.summary}</td>
                   <td>
                     {detailsHref ? (
-                      <Link className="font-semibold text-[var(--brand-500)] hover:text-[var(--brand-700)]" href={detailsHref}>
+                      <Link
+                        className="font-semibold text-[var(--brand-500)] hover:text-[var(--brand-700)]"
+                        href={detailsHref}
+                      >
                         Details
                       </Link>
                     ) : null}

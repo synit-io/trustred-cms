@@ -10,11 +10,17 @@ import { SiteShell } from '@/components/trustred/SiteShell'
 import { getPublicOperationById, getPublicOperations, getSiteSettings } from '@/lib/trustred/cms'
 import { getOperationMeta } from '@/lib/trustred/operations'
 import { getOperationDetailPath } from '@/lib/trustred/operations'
-import { formatDate, getMediaImage, shouldShowImagePlaceholder } from '@/lib/trustred/public-content'
+import {
+  formatDate,
+  getMediaImage,
+  shouldShowImagePlaceholder,
+} from '@/lib/trustred/public-content'
+import { getSiteTimeZone } from '@/lib/trustred/time'
 
 const timeFormat = new Intl.DateTimeFormat('de-DE', {
   hour: '2-digit',
   minute: '2-digit',
+  timeZone: getSiteTimeZone(),
 })
 
 type Props = {
@@ -25,7 +31,11 @@ type Props = {
 
 export default async function OperationDetailPage({ params }: Props) {
   const { id } = await params
-  const [operation, operations, settings] = await Promise.all([getPublicOperationById(id), getPublicOperations(), getSiteSettings()])
+  const [operation, operations, settings] = await Promise.all([
+    getPublicOperationById(id),
+    getPublicOperations(),
+    getSiteSettings(),
+  ])
 
   if (!operation) {
     notFound()
@@ -122,33 +132,47 @@ export default async function OperationDetailPage({ params }: Props) {
                 </section>
               </div>
 
-              <aside className={`rounded-[1.2rem] border border-neutral-200 p-4 ${operationMeta.rowClass}`}>
+              <aside
+                className={`rounded-[1.2rem] border border-neutral-200 p-4 ${operationMeta.rowClass}`}
+              >
                 <h2 className="text-xl">Einsatzdaten</h2>
                 <div className="mt-3 grid gap-3">
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Kategorie</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Kategorie
+                    </p>
                     <div className="mt-2">
                       <OperationTypeBadge type={operation.category} />
                     </div>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Datum</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Datum
+                    </p>
                     <p className="mt-1 text-sm text-neutral-800">{operationDateLabel}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Uhrzeit</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Uhrzeit
+                    </p>
                     <p className="mt-1 text-sm text-neutral-800">{operationTimeLabel}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Stichwort</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Stichwort
+                    </p>
                     <p className="mt-1 text-sm text-neutral-800">{operation.alarmCode}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Einsatzort</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Einsatzort
+                    </p>
                     <p className="mt-1 text-sm text-neutral-800">{operation.location}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Eingesetzte Einheiten</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Eingesetzte Einheiten
+                    </p>
                     {resolvedUnitsInvolved.length > 0 ? (
                       <ul className="mt-1 grid gap-1 text-sm text-neutral-700">
                         {resolvedUnitsInvolved.map((unit) => (
@@ -160,9 +184,12 @@ export default async function OperationDetailPage({ params }: Props) {
                     )}
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">Nächster Schritt</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                      Nächster Schritt
+                    </p>
                     <p className="mt-2 text-sm leading-7 text-neutral-700">
-                      Weitere Einsatzberichte findest du in der Übersicht. Bei allgemeinen Fragen stehen Kontakt und Sicherheitshinweise direkt bereit.
+                      Weitere Einsatzberichte findest du in der Übersicht. Bei allgemeinen Fragen
+                      stehen Kontakt und Sicherheitshinweise direkt bereit.
                     </p>
                     <div className="mt-3 grid gap-2">
                       <Link className="ff-btn-accent w-full" href="/einsaetze">
@@ -192,7 +219,9 @@ export default async function OperationDetailPage({ params }: Props) {
             <section className="mx-auto mt-6 grid max-w-5xl gap-4">
               <div className="ff-section-head mb-0">
                 <p className="ff-kicker">Weitere Einsätze</p>
-                <h2 className="text-[clamp(1.6rem,4vw,2.6rem)]">Weitere freigegebene Einsatzberichte</h2>
+                <h2 className="text-[clamp(1.6rem,4vw,2.6rem)]">
+                  Weitere freigegebene Einsatzberichte
+                </h2>
               </div>
               <div className="grid gap-4 lg:grid-cols-3">
                 {relatedOperations.map((relatedOperation) => (
@@ -203,10 +232,15 @@ export default async function OperationDetailPage({ params }: Props) {
                     </div>
                     <div>
                       <h2 className="text-2xl">{relatedOperation.operationNumber}</h2>
-                      <p className="mt-3 text-sm leading-7 text-neutral-700">{relatedOperation.summary}</p>
+                      <p className="mt-3 text-sm leading-7 text-neutral-700">
+                        {relatedOperation.summary}
+                      </p>
                     </div>
                     <div className="mt-auto">
-                      <Link className="ff-btn-accent w-full" href={getOperationDetailPath(relatedOperation)}>
+                      <Link
+                        className="ff-btn-accent w-full"
+                        href={getOperationDetailPath(relatedOperation)}
+                      >
                         Einsatz ansehen
                       </Link>
                     </div>

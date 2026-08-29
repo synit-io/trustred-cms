@@ -1,7 +1,11 @@
 import type { Event as PayloadEvent } from '@/payload-types'
+import { getSiteTimeZone } from '@/lib/trustred/time'
 
 function formatIcsDate(value: Date) {
-  return value.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')
+  return value
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z')
 }
 
 function escapeIcsText(value: string) {
@@ -14,7 +18,9 @@ function escapeIcsText(value: string) {
 
 export function createEventIcs(event: PayloadEvent) {
   const startsAt = new Date(event.startsAt)
-  const endsAt = event.endsAt ? new Date(event.endsAt) : new Date(startsAt.getTime() + 2 * 60 * 60 * 1000)
+  const endsAt = event.endsAt
+    ? new Date(event.endsAt)
+    : new Date(startsAt.getTime() + 2 * 60 * 60 * 1000)
   const stamp = new Date()
 
   return [
@@ -22,6 +28,7 @@ export function createEventIcs(event: PayloadEvent) {
     'VERSION:2.0',
     'PRODID:-//Trustred CMS//Events//DE',
     'CALSCALE:GREGORIAN',
+    `X-WR-TIMEZONE:${getSiteTimeZone()}`,
     'BEGIN:VEVENT',
     `UID:event-${event.id}@trustred-cms`,
     `DTSTAMP:${formatIcsDate(stamp)}`,
