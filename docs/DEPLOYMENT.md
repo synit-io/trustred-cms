@@ -18,6 +18,11 @@ integration tests, and end-to-end tests pass. Repository maintainers must define
 GitHub Actions secret. The token needs write access to the public
 `synitio/trustred-cms` Docker Hub repository.
 
+Image builds use a public build-only `PAYLOAD_SECRET` placeholder because Next.js
+loads the Payload configuration while collecting page data. The placeholder is
+not retained as a runtime environment variable. Every deployed container still
+requires its own stable `PAYLOAD_SECRET`.
+
 This guide targets a Linux server with Docker Engine, Docker Compose v2, a domain,
 and an HTTPS reverse proxy. The product is free for uses permitted by the
 [PolyForm Noncommercial License 1.0.0](../LICENSE). Commercial use requires a

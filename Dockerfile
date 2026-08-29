@@ -11,7 +11,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p /app/data /app/media /app/public
-RUN npm run build
+RUN PAYLOAD_SECRET=trustred-build-only-secret npm run build
 RUN npx esbuild scripts/seed.ts scripts/seed-user.ts scripts/run-migrations.ts \
   --bundle \
   --platform=node \
