@@ -140,6 +140,7 @@ development credentials on an internet-facing installation.
 npm run dev
 npm run build
 npm run lint
+npm test
 npm run test:int
 npm run test:e2e
 npm run generate:types
@@ -179,6 +180,11 @@ npm run lint
 npm run test:int
 npm run build
 ```
+
+Run `npm test` for the complete integration and browser test suite. The combined
+script uses npm throughout so it reuses the dependencies installed by `npm ci`.
+Using pnpm inside this script can trigger an automatic install and replace the
+npm dependency tree.
 
 Run end-to-end tests when changing frontend routes, authentication, setup, or
 editorial workflows:
