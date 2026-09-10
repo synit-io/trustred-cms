@@ -58,7 +58,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.4",
     "jsdom": "29.1.1",
-    "pnpm": "^11.26.0",
+    "pnpm": "^12.3.4",
     "prettier": "^3.9.6",
     "tsx": "4.23.13",
     "typescript": "~6.0.3",
