@@ -21,6 +21,33 @@ export PATH="$HOME/.nvm/versions/node/v24.14.1/bin:$PATH"
 npm ci
 ```
 
+Keep `payload` and all direct `@payloadcms/*` dependencies on the same stable
+release, currently `3.89.0`. Next.js `16.3.4` and React `19.3.0` satisfy this
+release's peer requirements. The remaining compatibility constraints are:
+
+- GraphQL stays on `16.x`, as required by Payload.
+- ESLint stays on `9.x` because `eslint-plugin-react` does not support ESLint 10.
+  ESLint 9 is stable but is marked unsupported upstream.
+- TypeScript stays on `6.0.x` because TypeScript-ESLint requires `<6.1.0`.
+- pnpm stays on `11.x`, within the project's declared package manager range.
+- jsdom stays on `29.1.1`; jsdom 30 requires a newer Node 24 patch than `.nvmrc`.
+- Node type definitions stay on `24.x` to match the project's runtime.
+
+Direct dependencies use stable releases. Upstream dependencies still require
+`body-scroll-lock@4.0.0-beta.0`, `gensync@1.0.0-beta.2`, and
+`resolve@2.0.0-next.7`; do not force incompatible stable replacements through
+overrides.
+
+After changing dependencies, update `package-lock.json` and verify a clean
+installation with peer and engine validation enabled:
+
+```bash
+npm ci --legacy-peer-deps=false --strict-peer-deps --engine-strict
+npm ls --all
+```
+
+Normal `npm ci` does not require `--legacy-peer-deps` or `--force`.
+
 Dependency install scripts are explicitly reviewed through
 `package.json#allowScripts`. When an approved transitive build dependency changes
 version, review its installation script before updating the pinned entry.
