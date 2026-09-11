@@ -72,6 +72,27 @@ export const SiteSettings: GlobalConfig = {
           type: 'text',
           defaultValue: '#f7f7f4',
         },
+        {
+          name: 'logo',
+          type: 'upload',
+          relationTo: 'media',
+          admin: {
+            description:
+              'Optionales Logo für Header und Footer. Ohne Logo wird die Standard-Bildmarke verwendet.',
+          },
+        },
+        {
+          name: 'brandMark',
+          type: 'select',
+          defaultValue: 'flame',
+          options: [
+            { label: 'Flamme (Standard)', value: 'flame' },
+            { label: 'Keine Bildmarke', value: 'none' },
+          ],
+          admin: {
+            description: 'Bildmarke, wenn kein Logo hochgeladen ist.',
+          },
+        },
       ],
     },
     {

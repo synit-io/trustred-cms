@@ -40,11 +40,11 @@ export function OperationsTable({ operations }: { operations: Operation[] }) {
                 ) : (
                   <span className={getStatusBadgeClass('brand')}>{operation.operationNumber}</span>
                 )}
-                <span className={getStatusBadgeClass('warning')}>{operation.alarmCode}</span>
+                <span className={getStatusBadgeClass('neutral')}>{operation.alarmCode}</span>
                 <OperationTypeBadge type={operation.category} />
               </div>
               <h3 className="mt-4 text-xl">{operation.location}</h3>
-              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+              <p className="mt-2 text-sm font-semibold text-neutral-600">
                 {dateTimeFormat.format(new Date(operation.startedAt))}
               </p>
               <p className="mt-3 text-sm leading-6 text-neutral-700">{operation.summary}</p>
@@ -101,7 +101,7 @@ export function OperationsTable({ operations }: { operations: Operation[] }) {
                   </th>
                   <td>{dateTimeFormat.format(new Date(operation.startedAt))}</td>
                   <td>
-                    <span className={getStatusBadgeClass('warning')}>{operation.alarmCode}</span>
+                    <span className={getStatusBadgeClass('neutral')}>{operation.alarmCode}</span>
                   </td>
                   <td>
                     <OperationTypeBadge type={operation.category} />

@@ -43,7 +43,7 @@ export default async function PostDetailPage({ params }: Props) {
     <SiteShell pathname="/aktuelles" settings={settings}>
       <section className="ff-section">
         <div className="site-container">
-          <article className="mx-auto w-full max-w-5xl overflow-hidden rounded-[1.8rem] border border-neutral-200 bg-white shadow-[0_18px_40px_rgba(0,45,103,0.08)]">
+          <article className="mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
             <div className="grid gap-8 p-6 md:p-8 lg:p-10">
               <header className="max-w-4xl space-y-5">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
@@ -60,7 +60,7 @@ export default async function PostDetailPage({ params }: Props) {
                 <p className="ff-kicker">Aktuelles</p>
                 <h1 className="text-[clamp(2.2rem,5vw,4.4rem)]">{post.title}</h1>
 
-                <div className="flex flex-wrap items-center gap-3 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-neutral-600">
                   <span>{formatDate(post.publishedAt ?? post.updatedAt)}</span>
                   <span className="text-neutral-300">|</span>
                   <span>{postCategoryLabels[post.category] ?? post.category}</span>
@@ -81,7 +81,7 @@ export default async function PostDetailPage({ params }: Props) {
               </header>
 
               {image?.src ? (
-                <div className="overflow-hidden rounded-[1.5rem] border border-neutral-200">
+                <div className="overflow-hidden rounded-2xl border border-neutral-200">
                   <Image
                     alt={image.alt}
                     className="h-[18rem] w-full object-cover md:h-[24rem]"
@@ -107,8 +107,8 @@ export default async function PostDetailPage({ params }: Props) {
                 </div>
 
                 <aside className="grid gap-4 xl:sticky xl:top-28">
-                  <div className="rounded-[1.3rem] border border-neutral-200 bg-neutral-50 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Beitragsdaten</p>
+                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                    <p className="ff-label">Beitragsdaten</p>
                     <div className="mt-4 grid gap-3 text-sm leading-7 text-neutral-700">
                       <p>
                         <strong className="text-neutral-900">Bereich:</strong>{' '}
@@ -124,8 +124,8 @@ export default async function PostDetailPage({ params }: Props) {
                     </div>
                   </div>
 
-                  <div className="rounded-[1.3rem] border border-neutral-200 bg-white p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Nächster Schritt</p>
+                  <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                    <p className="ff-label">Nächster Schritt</p>
                     <p className="mt-3 text-sm leading-7 text-neutral-700">
                       Lies weitere Meldungen aus {postCategoryLabels[post.category] ?? post.category} oder melde dich direkt, wenn du Rückfragen oder Interesse am Thema hast.
                     </p>
@@ -142,8 +142,8 @@ export default async function PostDetailPage({ params }: Props) {
                     </div>
                   </div>
 
-                  <div className="rounded-[1.3rem] border border-neutral-200 bg-neutral-50 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Teilen</p>
+                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                    <p className="ff-label">Teilen</p>
                     <p className="mt-3 text-sm leading-7 text-neutral-700">
                       Beitrag direkt weitergeben oder den Link für Presse, Team oder Interessierte kopieren.
                     </p>

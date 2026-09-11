@@ -54,7 +54,7 @@ export default async function ManageDashboardPage() {
         </p>
       </section>
       {permissions.canAccessSettings && setupState.status !== 'completed' ? (
-        <section className="ff-card border-amber-200 bg-amber-50">
+        <section className="ff-card border-status-warning-border">
           <p className="ff-kicker">Setup</p>
           <h3 className="text-2xl">Ersteinrichtung fortsetzen</h3>
           <p className="mt-3 max-w-3xl text-neutral-700">
@@ -114,7 +114,7 @@ export default async function ManageDashboardPage() {
         {counts.map((entry) => (
           <article className="ff-card" key={entry.slug}>
             <p className="ff-kicker">{entry.label}</p>
-            <p className="font-headline text-4xl text-[var(--brand-500)]">{entry.count}</p>
+            <p className="font-headline text-4xl font-semibold text-neutral-900">{entry.count}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link className="ff-btn-accent" href={`/manage/content/${entry.slug}`}>
                 Öffnen

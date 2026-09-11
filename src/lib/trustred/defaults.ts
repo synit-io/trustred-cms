@@ -91,6 +91,8 @@ export const defaultSiteSettings = {
   theme: {
     brandColor: '#871d33',
     brandColorStrong: '#6d1729',
+    brandMark: 'flame' as const,
+    logo: null,
     surfaceColor: '#f7f7f4',
   },
 }

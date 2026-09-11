@@ -1,19 +1,73 @@
 @import url('https://fonts.googleapis.com/css2?family=Fugaz+One&family=Open+Sans:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
+/*
+ * TrustRed family tokens (see docs/DESIGN_GUIDE.md).
+ * Neutral slate foundation, semantic status colors, brand only for identity and
+ * primary actions. Brand values stay runtime-configurable via SiteSettings.
+ */
 @theme {
-  --font-headline: 'Fugaz One', sans-serif;
-  --font-main: 'Open Sans', sans-serif;
+  --font-headline: 'Fugaz One', 'Arial Black', 'Helvetica Neue', sans-serif;
+  --font-main: 'Open Sans', 'Segoe UI', system-ui, sans-serif;
 
-  --color-brand-500: #871d33;
-  --color-brand-700: #6d1729;
-  --color-neutral-50: #f7f7f4;
-  --color-neutral-100: #f1f1ee;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-300: #cbd5e1;
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #fafaf9;
+  --color-neutral-100: #f4f4f3;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
   --color-neutral-600: #52525b;
   --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
   --color-neutral-900: #18181b;
+  --color-neutral-950: #09090b;
+
+  --color-status-info-bg: #eff6ff;
+  --color-status-info-border: #93c5fd;
+  --color-status-info-fg: #1d4ed8;
+
+  --color-status-success-bg: #f0fdf4;
+  --color-status-success-border: #86efac;
+  --color-status-success-fg: #166534;
+
+  --color-status-warning-bg: #fffbeb;
+  --color-status-warning-border: #fcd34d;
+  --color-status-warning-fg: #b45309;
+
+  --color-status-danger-bg: #fef2f2;
+  --color-status-danger-border: #fca5a5;
+  --color-status-danger-fg: #b91c1c;
+
+  --color-status-muted-bg: #fafaf9;
+  --color-status-muted-border: #d4d4d8;
+  --color-status-muted-fg: #52525b;
+
+  --color-surface-card: #ffffff;
+  --color-surface-inverse: #0b0b0d;
+
+  --color-border-subtle: #e4e4e7;
+  --color-border-default: #d4d4d8;
+  --color-border-strong: #a1a1aa;
+
+  --color-focus-ring: #2563eb;
+  --color-disabled-bg: #e4e4e7;
+  --color-disabled-fg: #a1a1aa;
+
+  --shadow-card: 0 10px 26px rgba(17, 24, 39, 0.06);
+  --shadow-card-hover: 0 14px 30px rgba(17, 24, 39, 0.09);
+  --shadow-overlay: 0 20px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* Brand utilities resolve at the element so per-site overrides on .ff-theme apply. */
+@theme inline {
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-surface-page: var(--surface-page);
 }
 
 :root {
@@ -22,15 +76,25 @@
   --surface-page: #f7f7f4;
 }
 
+:root,
+.ff-theme {
+  --brand-50: color-mix(in srgb, var(--brand-500) 6%, white);
+  --brand-100: color-mix(in srgb, var(--brand-500) 12%, white);
+  --brand-200: color-mix(in srgb, var(--brand-500) 26%, white);
+  --brand-600: color-mix(in srgb, var(--brand-500) 60%, var(--brand-700));
+  --brand-shadow: color-mix(in srgb, var(--brand-500) 14%, transparent);
+  --brand-glow: color-mix(in srgb, var(--brand-500) 9%, transparent);
+}
+
 @layer base {
   html {
-    @apply scroll-smooth bg-[var(--surface-page)] text-neutral-900;
+    @apply scroll-smooth bg-surface-page text-neutral-900;
   }
 
   body {
-    @apply m-0 font-main antialiased;
+    @apply m-0 font-main text-base antialiased;
     background:
-      radial-gradient(circle at 100% 0%, rgba(135, 29, 51, 0.09) 0, transparent 30%),
+      radial-gradient(circle at 100% 0%, var(--brand-glow) 0, transparent 30%),
       radial-gradient(circle at 0% 100%, rgba(17, 24, 39, 0.03) 0, transparent 30%),
       var(--surface-page);
   }
@@ -39,7 +103,8 @@
   h2,
   h3,
   h4 {
-    @apply font-headline uppercase leading-[1.08] tracking-[0.03em];
+    @apply font-headline uppercase leading-[1.08] tracking-[0.03em] text-neutral-900;
+    text-wrap: balance;
   }
 
   a,
@@ -49,24 +114,56 @@
   textarea,
   summary,
   [tabindex] {
-    @apply transition-all duration-200;
+    transition:
+      color 140ms ease,
+      background-color 140ms ease,
+      border-color 140ms ease,
+      box-shadow 140ms ease,
+      transform 140ms ease,
+      opacity 140ms ease;
   }
 
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-    outline: 3px solid var(--brand-500);
-    outline-offset: 3px;
+    outline: none;
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px var(--color-focus-ring);
+  }
+
+  .ff-inverse :where(a, button, [tabindex]):focus-visible {
+    box-shadow:
+      0 0 0 2px var(--color-surface-inverse),
+      0 0 0 4px #93c5fd;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
-  .site-container {
-    @apply mx-auto w-[min(1540px,calc(100%-2rem))];
-  }
-
+  .site-container,
   .site-container-manage {
-    @apply mx-auto w-[min(1540px,calc(100%-2rem))];
+    @apply mx-auto w-[min(1400px,calc(100%-2rem))] md:w-[min(1400px,calc(100%-3rem))];
   }
 
+  /* Shell */
+  .ff-top-stripe {
+    height: 3px;
+    background: var(--brand-500);
+  }
+
+  /* Warning-tape accent: identity element for fire and rescue services. */
   .stripe-bg {
     background: repeating-linear-gradient(
       -45deg,
@@ -77,8 +174,68 @@
     );
   }
 
+  .ff-inverse .stripe-bg {
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--color-surface-inverse),
+      var(--color-surface-inverse) 24px,
+      var(--brand-500) 24px,
+      var(--brand-500) 48px
+    );
+  }
+
+  .ff-gradient-band {
+    background: linear-gradient(135deg, #0a0a0b, #1f1f24 55%, var(--brand-700));
+  }
+
+  .ff-hero-fallback {
+    @apply relative flex h-[26rem] items-end overflow-hidden rounded-xl p-6;
+    background:
+      linear-gradient(160deg, var(--brand-100), rgba(255, 255, 255, 0.92)),
+      linear-gradient(0deg, rgba(17, 24, 39, 0.28), rgba(17, 24, 39, 0.04));
+  }
+
+  .ff-header {
+    @apply border-b border-border-subtle bg-white/95 backdrop-blur;
+    box-shadow: 0 10px 24px rgba(0, 45, 103, 0.06);
+  }
+
+  .ff-announcement {
+    @apply text-white;
+    background: var(--brand-500);
+  }
+
+  .ff-main {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .ff-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, transparent 47px, rgba(148, 163, 184, 0.09) 48px),
+      linear-gradient(to bottom, transparent 47px, rgba(148, 163, 184, 0.09) 48px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 640px);
+  }
+
+  .ff-inverse {
+    @apply bg-surface-inverse text-neutral-200;
+  }
+
+  .ff-inverse h2,
+  .ff-inverse h3,
+  .ff-inverse h4 {
+    @apply text-white;
+  }
+
+  /* Sections */
   .ff-section {
-    @apply py-12 md:py-16 lg:py-20;
+    @apply py-10 md:py-14 lg:py-16;
   }
 
   .ff-section-head {
@@ -86,21 +243,59 @@
   }
 
   .ff-kicker {
-    @apply mb-2 font-headline text-xs uppercase tracking-[0.18em] text-[var(--brand-500)];
+    @apply mb-2 block font-headline text-xs uppercase tracking-[0.18em];
+    color: var(--brand-500);
   }
 
+  .ff-label {
+    @apply text-xs font-bold uppercase tracking-[0.08em] text-neutral-500;
+  }
+
+  /* Surfaces */
   .ff-card {
-    @apply rounded-[1.6rem] border border-neutral-200 bg-white p-5 shadow-[0_12px_30px_rgba(0,45,103,0.08)];
+    @apply rounded-2xl border border-border-subtle bg-white p-5 shadow-card md:p-6;
+  }
+
+  a.ff-card:hover,
+  .ff-card--interactive:hover {
+    border-color: var(--brand-200);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .ff-manage-panel {
+    @apply rounded-2xl border border-border-subtle bg-white p-5 shadow-card md:p-6;
+  }
+
+  .ff-tile {
+    @apply rounded-xl border border-border-subtle bg-neutral-50 p-4;
   }
 
   .ff-grid-3 {
     @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3;
   }
 
+  /* Buttons */
+  .ff-btn-accent,
+  .ff-btn-ghost,
+  .ff-btn-light,
+  .ff-btn-manage-site,
+  .ff-btn-danger {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-headline text-xs uppercase leading-tight tracking-[0.1em];
+  }
+
+  .ff-btn-accent:hover,
+  .ff-btn-ghost:hover,
+  .ff-btn-light:hover,
+  .ff-btn-manage-site:hover,
+  .ff-btn-danger:hover {
+    @apply -translate-y-0.5;
+  }
+
   .ff-btn-accent {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-headline text-xs uppercase tracking-[0.1em] text-white hover:-translate-y-0.5;
+    @apply border text-white;
     border-color: var(--brand-500);
     background: var(--brand-500);
+    box-shadow: 0 8px 18px var(--brand-shadow);
   }
 
   .ff-btn-accent:hover {
@@ -108,87 +303,150 @@
     background: var(--brand-700);
   }
 
+  .ff-btn-accent:active {
+    transform: translateY(0);
+  }
+
+  .ff-btn-accent:disabled {
+    @apply cursor-not-allowed border-disabled-bg bg-disabled-bg text-disabled-fg shadow-none;
+  }
+
   .ff-btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-neutral-950 bg-transparent px-4 font-headline text-xs uppercase tracking-[0.1em] text-neutral-900 hover:-translate-y-0.5 hover:text-white;
+    @apply border border-neutral-900 bg-white text-neutral-900;
   }
 
   .ff-btn-ghost:hover {
     border-color: var(--brand-500);
-    background: var(--brand-500);
+    color: var(--brand-700);
   }
 
-  .ff-btn-light {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-white/40 bg-white px-4 font-headline text-xs uppercase tracking-[0.1em] text-neutral-900 hover:-translate-y-0.5;
-  }
-
-  .ff-btn-light:hover {
-    border-color: var(--brand-500);
-    background: var(--brand-500);
-    color: white;
+  .ff-btn-ghost:disabled {
+    @apply cursor-not-allowed text-disabled-fg;
   }
 
   .ff-btn-ghost-inverse {
-    @apply border-white/50 text-white hover:border-white hover:bg-white hover:text-neutral-900;
+    @apply border-white/40 bg-transparent text-white;
   }
 
-  .ff-pill {
-    @apply inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-neutral-700;
+  .ff-btn-ghost-inverse:hover {
+    @apply border-white bg-white/10 text-white;
   }
 
-  .ff-pill--brand {
-    @apply bg-rose-100 text-rose-800 border border-rose-200;
+  .ff-btn-light {
+    @apply border border-white bg-white text-neutral-900;
+  }
+
+  .ff-btn-light:hover {
+    @apply border-neutral-100 bg-neutral-100;
+  }
+
+  .ff-btn-manage-site {
+    @apply border;
+    border-color: var(--brand-200);
+    background: var(--brand-50);
+    color: var(--brand-700);
+  }
+
+  .ff-btn-manage-site:hover {
+    border-color: var(--brand-500);
+    background: var(--brand-100);
+  }
+
+  .ff-btn-danger {
+    @apply border border-status-danger-border bg-white text-status-danger-fg;
+  }
+
+  .ff-btn-danger:hover {
+    @apply border-status-danger-fg bg-status-danger-bg;
+  }
+
+  .ff-btn-tertiary {
+    @apply inline-flex min-h-11 items-center gap-2 rounded-lg px-1 font-headline text-xs uppercase tracking-[0.1em] underline-offset-4;
+    color: var(--brand-500);
+  }
+
+  .ff-btn-tertiary:hover {
+    @apply underline;
+  }
+
+  .ff-btn-accent.w-full,
+  .ff-btn-ghost.w-full,
+  .ff-btn-manage-site.w-full {
+    @apply justify-center;
+  }
+
+  /* Badges */
+  .ff-pill,
+  .ff-op-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-[0.06em] text-neutral-800;
+  }
+
+  .ff-pill--brand,
+  .ff-op-chip--brand {
+    border-color: var(--brand-200);
+    background: var(--brand-50);
+    color: var(--brand-700);
   }
 
   .ff-pill--published {
-    @apply bg-emerald-100 text-emerald-800 border border-emerald-200;
+    @apply border-status-success-border bg-status-success-bg text-status-success-fg;
   }
 
-  .ff-pill--info {
-    @apply bg-sky-100 text-sky-800 border border-sky-200;
+  .ff-pill--info,
+  .ff-op-chip--hilfe {
+    @apply border-status-info-border bg-status-info-bg text-status-info-fg;
   }
 
-  .ff-pill--warning {
-    @apply bg-amber-100 text-amber-800 border border-amber-200;
+  .ff-pill--warning,
+  .ff-op-chip--wetter {
+    @apply border-status-warning-border bg-status-warning-bg text-status-warning-fg;
+  }
+
+  .ff-pill--danger {
+    @apply border-status-danger-border bg-status-danger-bg text-status-danger-fg;
   }
 
   .ff-pill--team {
-    @apply bg-violet-100 text-violet-800 border border-violet-200;
+    @apply border-neutral-300 bg-white text-neutral-700;
   }
 
-  .ff-pill--neutral {
-    @apply bg-neutral-100 text-neutral-700 border border-neutral-200;
+  .ff-pill--neutral,
+  .ff-op-chip--sonstiges {
+    @apply border-status-muted-border bg-status-muted-bg text-status-muted-fg;
   }
 
   .ff-skill-badge {
-    @apply inline-flex items-center rounded-full border border-neutral-300 bg-neutral-100 px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.06em] text-neutral-700;
+    @apply inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 px-2 py-1 text-xs font-semibold text-neutral-700;
   }
 
-  .ff-op-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.08em];
+  /* Callouts */
+  .ff-callout {
+    @apply rounded-xl border p-4 text-sm leading-6;
   }
 
-  .ff-op-chip--brand {
-    @apply border-rose-300 bg-rose-100 text-rose-800;
+  .ff-callout--info {
+    @apply border-status-info-border bg-status-info-bg text-status-info-fg;
   }
 
-  .ff-op-chip--hilfe {
-    @apply border-blue-300 bg-blue-100 text-blue-700;
+  .ff-callout--success {
+    @apply border-status-success-border bg-status-success-bg text-status-success-fg;
   }
 
-  .ff-op-chip--wetter {
-    @apply border-amber-300 bg-amber-100 text-amber-700;
+  .ff-callout--warning {
+    @apply border-status-warning-border bg-status-warning-bg text-status-warning-fg;
   }
 
-  .ff-op-chip--sonstiges {
-    @apply border-neutral-300 bg-neutral-100 text-neutral-700;
+  .ff-callout--danger {
+    @apply border-status-danger-border bg-status-danger-bg text-status-danger-fg;
   }
 
+  /* Tables */
   .ff-table-wrap {
-    @apply overflow-x-auto rounded-[1.6rem] border border-neutral-200 bg-white shadow-[0_12px_30px_rgba(0,45,103,0.08)];
+    @apply overflow-x-auto rounded-2xl border border-border-subtle bg-white shadow-card;
   }
 
   .ff-table {
-    @apply min-w-[72rem] w-full border-collapse;
+    @apply w-full min-w-[64rem] border-collapse;
   }
 
   .ff-table thead th {
@@ -196,15 +454,20 @@
   }
 
   .ff-table tbody td {
-    @apply border-b border-neutral-200 px-4 py-3 align-top text-sm leading-6 text-neutral-700;
+    @apply border-b border-border-subtle px-4 py-3 align-top text-sm leading-6 text-neutral-700;
   }
 
   .ff-table tbody th {
-    @apply border-b border-neutral-200 px-4 py-3 text-left align-top text-sm font-semibold text-neutral-900;
+    @apply border-b border-border-subtle px-4 py-3 text-left align-top text-sm font-semibold text-neutral-900;
   }
 
-  .ff-table tbody tr {
-    @apply hover:bg-rose-50/40;
+  .ff-table tbody tr:last-child td,
+  .ff-table tbody tr:last-child th {
+    @apply border-b-0;
+  }
+
+  .ff-table tbody tr:hover {
+    background: var(--brand-50);
   }
 
   .ff-feature-list {
@@ -212,77 +475,78 @@
   }
 
   .ff-feature-list li {
-    @apply rounded-xl border border-rose-100 bg-rose-50/70 p-3 text-sm text-neutral-700;
+    @apply rounded-xl border border-border-subtle bg-neutral-50 p-4 text-sm leading-6 text-neutral-700;
   }
 
   .ff-feature-list strong {
     @apply mb-1 block text-neutral-900;
   }
 
+  /* Forms */
   .ff-form-grid {
     @apply grid gap-4;
   }
 
   .ff-form-grid label {
-    @apply grid gap-2 text-sm font-semibold text-neutral-700;
+    @apply grid gap-2 text-sm font-semibold text-neutral-800;
   }
 
   .ff-input {
-    @apply w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none transition focus:border-[var(--brand-500)] focus:ring-2 focus:ring-[color:var(--brand-500)]/20;
+    @apply min-h-11 w-full rounded-xl border border-border-default bg-white px-3 py-2 text-base text-neutral-900 outline-none placeholder:text-neutral-400;
+    box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.02);
+  }
+
+  .ff-input:hover {
+    @apply border-border-strong;
+  }
+
+  .ff-input:focus-visible {
+    border-color: var(--color-focus-ring);
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px var(--color-focus-ring);
+  }
+
+  .ff-input:disabled {
+    @apply bg-neutral-100 text-neutral-500;
+  }
+
+  .ff-input[aria-invalid='true'] {
+    @apply border-status-danger-border;
   }
 
   .ff-form-grid textarea.ff-input {
     @apply min-h-32 resize-y;
   }
 
+  /* Navigation */
   .nav-pill {
-    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-neutral-950 bg-neutral-950 px-3 font-headline text-xs uppercase tracking-[0.08em] text-white hover:-translate-y-0.5;
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg px-3 font-headline text-xs uppercase tracking-[0.08em] text-neutral-800;
   }
 
-  .nav-pill:hover,
-  .nav-pill-active {
-    border-color: var(--brand-500);
+  .nav-pill:hover {
+    background: var(--brand-50);
+    color: var(--brand-700);
+  }
+
+  .nav-pill-active,
+  .nav-pill-active:hover {
+    @apply text-white;
     background: var(--brand-500);
-  }
-
-  .nav-pill-active {
-    @apply shadow-[inset_0_-3px_0_rgba(255,255,255,0.55)];
+    box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.45);
   }
 
   .nav-pill.w-full {
-    @apply justify-center;
+    @apply min-h-11 justify-start;
   }
 
+  /* Media */
   .ff-media-placeholder {
-    @apply flex items-center justify-center overflow-hidden rounded-[1.3rem] border border-neutral-200 bg-white text-center text-[0.68rem] font-bold uppercase tracking-[0.12em] text-neutral-500;
-    background-image:
-      linear-gradient(135deg, rgba(135, 29, 51, 0.08) 25%, transparent 25%, transparent 50%, rgba(135, 29, 51, 0.08) 50%, rgba(135, 29, 51, 0.08) 75%, transparent 75%, transparent),
-      linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.92));
-    background-size: 24px 24px, auto;
-  }
-
-  .ff-btn-manage-site {
-    @apply inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-headline text-xs uppercase tracking-[0.1em] hover:-translate-y-0.5;
-    border-color: #d4a217;
-    background: #ffd24d;
-    color: #3a2500;
-  }
-
-  .ff-btn-manage-site.w-full {
-    @apply justify-center;
-  }
-
-  .ff-btn-manage-site:hover {
-    border-color: #b78500;
-    background: #ffdf7a;
-  }
-
-  .ff-manage-panel {
-    @apply rounded-[1.4rem] border border-neutral-200 bg-white p-5 shadow-[0_14px_32px_rgba(0,45,103,0.08)];
+    @apply flex items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-border-default bg-neutral-50 px-4 text-center text-xs font-bold uppercase tracking-[0.08em] text-neutral-500;
   }
 
   .ff-youtube-embed {
-    @apply relative w-full overflow-hidden rounded-[1.4rem] border border-neutral-200 bg-neutral-950;
+    @apply relative w-full overflow-hidden rounded-2xl border border-border-subtle bg-neutral-900;
     aspect-ratio: 16 / 9;
   }
 
@@ -290,16 +554,18 @@
     @apply absolute inset-0 h-full w-full border-0;
   }
 
+  /* Cookie consent */
   .ff-cookie-settings-btn {
-    @apply fixed bottom-4 right-4 z-40 inline-flex min-h-9 items-center justify-center rounded-full border border-neutral-300 bg-white px-4 text-xs font-semibold uppercase tracking-[0.08em] text-neutral-800 shadow-[0_10px_24px_rgba(0,0,0,0.12)];
+    @apply fixed bottom-4 right-4 z-40 inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-border-default bg-white px-4 text-xs font-bold uppercase tracking-[0.08em] text-neutral-800 shadow-card;
   }
 
   .ff-cookie-settings-btn:hover {
-    @apply border-[var(--brand-500)] text-[var(--brand-500)];
+    border-color: var(--brand-500);
+    color: var(--brand-700);
   }
 
   .ff-cookie-banner {
-    @apply fixed bottom-0 left-0 right-0 z-50 grid gap-4 border-t border-neutral-200 bg-white/95 p-4 backdrop-blur sm:p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end;
+    @apply fixed bottom-0 left-0 right-0 z-50 grid gap-4 border-t border-border-subtle bg-white/95 p-4 shadow-overlay backdrop-blur sm:p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end;
   }
 
   .ff-cookie-banner__content {
@@ -315,18 +581,19 @@
   }
 
   .ff-cookie-modal__backdrop {
-    @apply absolute inset-0 bg-black/45;
+    @apply absolute inset-0 bg-neutral-900/50;
   }
 
   .ff-cookie-modal__panel {
-    @apply relative z-[61] w-full max-w-2xl rounded-[1.4rem] border border-neutral-200 bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] sm:p-6;
+    @apply relative z-[61] w-full max-w-2xl rounded-2xl border border-border-subtle bg-white p-5 shadow-overlay sm:p-6;
   }
 
   .ff-cookie-option {
-    @apply grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4;
+    @apply grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 rounded-xl border border-border-subtle bg-neutral-50 p-4;
   }
 
   .ff-cookie-option input[type='checkbox'] {
     @apply mt-1 h-5 w-5;
+    accent-color: var(--brand-500);
   }
 }

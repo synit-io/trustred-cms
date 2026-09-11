@@ -75,7 +75,7 @@ export function EquipmentCompartmentsEditor({
   return (
     <div className="grid gap-4">
       {compartments.length === 0 ? (
-        <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
           Noch keine Fahrzeugabschnitte hinterlegt. Fuege den ersten Abschnitt hinzu.
         </div>
       ) : null}
@@ -83,7 +83,7 @@ export function EquipmentCompartmentsEditor({
       <div className="grid gap-3">
         {compartments.map((compartment, index) => (
           <section
-            className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4"
+            className="rounded-xl border border-neutral-200 bg-neutral-50 p-4"
             key={`equipment-compartment-${index}`}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

@@ -30,27 +30,39 @@ export function FAQAccordion({ className, faqs, openId, showCategory = true }: P
 
         return (
           <details
-            className="group overflow-hidden rounded-[1.3rem] border border-neutral-200 bg-white shadow-[0_12px_30px_rgba(0,45,103,0.08)] open:border-[color:var(--brand-500)]/25"
+            className="group overflow-hidden rounded-2xl border border-border-subtle bg-white shadow-card open:border-brand-200"
             id={`faq-${renderedId}`}
             key={faqKey}
             open={isOpen}
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 hover:bg-neutral-50">
               <div className="min-w-0">
                 {showCategory && faq.category ? (
-                  <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-[var(--brand-500)]">
+                  <p className="mb-1.5 font-headline text-[0.68rem] uppercase tracking-[0.12em] text-brand-500">
                     {faq.category}
                   </p>
                 ) : null}
-                <h3 className="text-lg leading-tight text-neutral-950 md:text-xl">
+                <h3 className="text-lg leading-snug text-neutral-900 md:text-xl">
                   {faq.question || 'Unbenannte Frage'}
                 </h3>
               </div>
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-neutral-50 text-xl font-semibold text-neutral-700 transition-transform group-open:rotate-45">
-                +
+              <span
+                aria-hidden="true"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border-default bg-white text-neutral-700 transition-transform group-open:rotate-45"
+              >
+                <svg
+                  className="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </span>
             </summary>
-            <div className="border-t border-neutral-200 bg-neutral-50/65 px-5 py-5">
+            <div className="border-t border-border-subtle bg-neutral-50 px-5 py-5">
               <p className="whitespace-pre-line text-sm leading-7 text-neutral-700 md:text-base md:leading-8">
                 {faq.answer || 'Für diese Frage liegt aktuell noch keine öffentliche Antwort vor.'}
               </p>

@@ -76,13 +76,13 @@ export function EventsAgendaSection({
                   <p className={`${getEventTypeBadgeClass(event.eventType)} w-fit`}>
                     {eventTypeLabels[event.eventType] ?? event.eventType}
                   </p>
-                  <p className="mt-3 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                  <p className="mt-3 text-sm font-semibold text-neutral-600">
                     {formatDateTimeRange(event.startsAt, event.endsAt)}
                   </p>
                 </div>
                 <div>
                   <h3 className="text-2xl">{event.title}</h3>
-                  <p className="mt-2 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                  <p className="mt-2 text-sm font-semibold text-neutral-600">
                     {event.location}
                   </p>
                   <p className="mt-3 text-sm leading-7 text-neutral-700">{event.summary}</p>
@@ -155,17 +155,17 @@ export function EventsAgendaSection({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 alt={leadImage.alt}
-                className="h-56 w-full rounded-[1.4rem] object-cover"
+                className="h-56 w-full rounded-2xl object-cover"
                 src={leadImage.src}
               />
             ) : shouldShowImagePlaceholder(nextEvent) ? (
               <MediaPlaceholder className="h-56 w-full" label="Kein Terminbild hinterlegt" />
             ) : null}
-            <div className="rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <p className="ff-label">
                 Nächster öffentlicher Termin
               </p>
-              <p className="mt-4 font-headline text-4xl text-[var(--brand-500)]">
+              <p className="mt-3 font-headline text-2xl font-semibold text-neutral-900">
                 {formatDateTimeRange(nextEvent.startsAt, nextEvent.endsAt)}
               </p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">{nextEvent.location}</p>
@@ -218,13 +218,13 @@ export function EventsAgendaSection({
                     <p className={`${getEventTypeBadgeClass(event.eventType)} w-fit`}>
                       {eventTypeLabels[event.eventType] ?? event.eventType}
                     </p>
-                    <p className="mt-3 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                    <p className="mt-3 text-sm font-semibold text-neutral-600">
                       {formatDateTimeRange(event.startsAt, event.endsAt)}
                     </p>
                   </div>
                   <div>
                     <h4 className="text-2xl">{event.title}</h4>
-                    <p className="mt-2 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                    <p className="mt-2 text-sm font-semibold text-neutral-600">
                       {event.location}
                     </p>
                     <p className="mt-3 text-sm leading-7 text-neutral-700">{event.summary}</p>
@@ -291,13 +291,13 @@ export function EventsAgendaSection({
                       <p className={`${getEventTypeBadgeClass(event.eventType)} w-fit`}>
                         {eventTypeLabels[event.eventType] ?? event.eventType}
                       </p>
-                      <p className="mt-3 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                      <p className="mt-3 text-sm font-semibold text-neutral-600">
                         {formatDateTimeRange(event.startsAt, event.endsAt)}
                       </p>
                     </div>
                     <div>
                       <h4 className="text-2xl">{event.title}</h4>
-                      <p className="mt-2 text-sm font-semibold uppercase tracking-[0.08em] text-neutral-600">
+                      <p className="mt-2 text-sm font-semibold text-neutral-600">
                         {event.location}
                       </p>
                       <p className="mt-3 text-sm leading-7 text-neutral-700">{event.summary}</p>

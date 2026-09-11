@@ -181,17 +181,17 @@ export default async function ManageCollectionPage({ params, searchParams }: Pro
           <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-neutral-200">
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">
+                <th className="py-3 pr-4 text-xs font-bold uppercase tracking-[0.06em] text-neutral-700">
                   Titel
                 </th>
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">ID</th>
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">
+                <th className="py-3 pr-4 text-xs font-bold uppercase tracking-[0.06em] text-neutral-700">ID</th>
+                <th className="py-3 pr-4 text-xs font-bold uppercase tracking-[0.06em] text-neutral-700">
                   Aktualisiert
                 </th>
-                <th className="py-3 pr-4 font-headline text-xs uppercase tracking-[0.08em]">
+                <th className="py-3 pr-4 text-xs font-bold uppercase tracking-[0.06em] text-neutral-700">
                   Status
                 </th>
-                <th className="py-3 font-headline text-xs uppercase tracking-[0.08em]">Aktion</th>
+                <th className="py-3 text-xs font-bold uppercase tracking-[0.06em] text-neutral-700">Aktion</th>
               </tr>
             </thead>
             <tbody>

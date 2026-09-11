@@ -46,7 +46,7 @@ export default async function SecurityPage({ searchParams }: Props) {
               ['Digital', 'Wichtige Hinweise und amtliche Warnungen nur aus verlässlichen Quellen teilen.'],
             ].map(([title, copy]) => (
               <article className="ff-card" key={title}>
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">{title}</p>
+                <p className="ff-label">{title}</p>
                 <p className="mt-3 text-sm leading-7 text-neutral-700">{copy}</p>
               </article>
             ))}

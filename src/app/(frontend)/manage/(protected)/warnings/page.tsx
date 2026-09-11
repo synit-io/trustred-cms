@@ -108,7 +108,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
           DWD-Systemwerte basieren auf dem bisherigen Trustred-Presetkatalog und den offiziellen
           DWD-Einbindungsdaten aus{' '}
           <a
-            className="text-[var(--brand-600)] underline"
+            className="ff-btn-tertiary min-h-0 px-0 underline"
             href={DWD_OBJECT_EMBED_DOCS_URL}
             rel="noreferrer"
             target="_blank"
@@ -117,7 +117,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
           </a>
           . NINA-Bundesland-Defaults folgen der offiziellen{' '}
           <a
-            className="text-[var(--brand-600)] underline"
+            className="ff-btn-tertiary min-h-0 px-0 underline"
             href={NINA_API_DOCS_URL}
             rel="noreferrer"
             target="_blank"
@@ -130,7 +130,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
 
       {status && message ? (
         <section
-          className={`ff-card ${status === 'error' ? 'border-rose-200 bg-rose-50' : 'border-emerald-200 bg-emerald-50'}`}
+          className={`ff-card ${status === 'error' ? 'border-status-danger-border bg-status-danger-bg' : 'border-status-success-border bg-status-success-bg'}`}
         >
           <p className="ff-kicker">Status</p>
           <p className="text-sm font-semibold text-neutral-900">{message}</p>
@@ -152,10 +152,10 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           {[dwdHealth, ninaHealth].filter(Boolean).map((snapshot) => (
             <article
-              className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4"
+              className="rounded-xl border border-neutral-200 bg-neutral-50 p-4"
               key={`${snapshot?.provider}-${snapshot?.regionLabel}`}
             >
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+              <p className="ff-label">
                 {snapshot?.provider?.toUpperCase()} · {snapshot?.regionLabel}
               </p>
               <p className="mt-3 text-base font-semibold text-neutral-900">
@@ -201,7 +201,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
         <div className="grid gap-3">
           {systemPresets.map((preset) => (
             <details
-              className="rounded-[1.2rem] border border-neutral-200 bg-white p-4"
+              className="rounded-xl border border-neutral-200 bg-white p-4"
               key={preset.key}
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
@@ -215,13 +215,13 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
               </summary>
               <div className="mt-4 grid gap-3 text-sm text-neutral-700 md:grid-cols-2">
                 <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <p className="ff-label">
                     Schlüssel
                   </p>
                   <p className="mt-2 break-all">{preset.key}</p>
                 </div>
                 <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                  <p className="ff-label">
                     Quelle
                   </p>
                   <p className="mt-2 break-all">{preset.sourceUrl || 'Nicht gesetzt'}</p>
@@ -229,7 +229,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
                 {preset.provider === 'dwd' ? (
                   <>
                     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                      <p className="ff-label">
                         Bundesländer
                       </p>
                       <p className="mt-2">
@@ -238,7 +238,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
                       </p>
                     </div>
                     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                      <p className="ff-label">
                         Karten
                       </p>
                       <p className="mt-2">
@@ -250,7 +250,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
                   </>
                 ) : (
                   <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    <p className="ff-label">
                       NINA ARS
                     </p>
                     <p className="mt-2">{preset.ninaArs || 'Nicht gesetzt'}</p>
@@ -275,7 +275,7 @@ export default async function ManageWarningsPage({ searchParams }: Props) {
         <div className="grid gap-4">
           {warningPresetRows.map((preset, index) => (
             <details
-              className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4"
+              className="rounded-xl border border-neutral-200 bg-neutral-50 p-4"
               key={`warning-preset-${index}`}
               open={Boolean(preset.label || preset.regionLabel)}
             >

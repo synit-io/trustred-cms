@@ -55,18 +55,18 @@ export default async function ContactPage({ searchParams }: Props) {
           <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
             <aside className="grid gap-4">
               <article className="ff-card">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Wichtiger Hinweis</p>
+                <p className="ff-label">Wichtiger Hinweis</p>
                 <p className="mt-3 text-sm leading-7 text-neutral-700">
                   Bei akuter Gefahr oder medizinischem Notfall gilt immer: <strong className="text-neutral-900">{settings.contact?.emergencyNumber || '112'}</strong>. Dieses Formular ist kein Notrufkanal.
                 </p>
               </article>
               <article className="ff-card">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Erreichbarkeit</p>
+                <p className="ff-label">Erreichbarkeit</p>
                 <p className="mt-3 whitespace-pre-line text-sm leading-7 text-neutral-700">{settings.contact?.address}</p>
                 <p className="mt-3 text-sm leading-7 text-neutral-700">E-Mail: {settings.contact?.email}</p>
               </article>
               <article className="ff-card">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Weitere Wege</p>
+                <p className="ff-label">Weitere Wege</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Link className="ff-btn-ghost" href="/mitmachen">
                     Mitmachen
@@ -80,7 +80,7 @@ export default async function ContactPage({ searchParams }: Props) {
 
             <div className="grid gap-4">
               {sent === '1' ? (
-                <div className="rounded-[1.2rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="ff-callout ff-callout--success">
                   {config.successMessage}
                 </div>
               ) : null}

@@ -276,14 +276,14 @@ export default async function ManageMediaPage({ searchParams }: Props) {
       </section>
 
       {status && message ? (
-        <section className={`ff-card ${status === 'error' ? 'border-rose-200 bg-rose-50' : 'border-emerald-200 bg-emerald-50'}`}>
+        <section className={`ff-card ${status === 'error' ? 'border-status-danger-border bg-status-danger-bg' : 'border-status-success-border bg-status-success-bg'}`}>
           <p className="ff-kicker">Status</p>
           <p className="text-sm font-semibold text-neutral-900">{message}</p>
         </section>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem]">
-        <div className="grid gap-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem] xl:items-start">
+        <div className="grid content-start gap-6">
           <form className="ff-card grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem_auto] md:items-end" method="get">
             <label>
               Suche
@@ -316,27 +316,27 @@ export default async function ManageMediaPage({ searchParams }: Props) {
             </div>
 
             {filteredMedia.length === 0 ? (
-              <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
+              <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
                 Keine Medien für diese Filter gefunden.
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                 {filteredMedia.map((item) => (
                   <Link
-                    className={`rounded-[1.4rem] border p-3 shadow-[0_10px_24px_rgba(0,45,103,0.06)] transition hover:-translate-y-0.5 ${
-                      selectedMedia?.id === item.id ? 'border-[var(--brand-500)] bg-rose-50/60' : 'border-neutral-200 bg-white'
+                    className={`rounded-2xl border p-3 shadow-card transition hover:-translate-y-0.5 ${
+                      selectedMedia?.id === item.id ? 'border-[var(--brand-500)] bg-brand-50' : 'border-neutral-200 bg-white'
                     }`}
                     href={`/manage/media?selected=${item.id}${category ? `&category=${encodeURIComponent(category)}` : ''}${query ? `&q=${encodeURIComponent(query)}` : ''}`}
                     key={item.id}
                   >
                     {item.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img alt={item.alt} className="h-48 w-full rounded-[1rem] object-cover" src={item.thumbnailURL ?? item.url} />
+                      <img alt={item.alt} className="h-48 w-full rounded-xl object-cover" src={item.thumbnailURL ?? item.url} />
                     ) : (
                       <div className="ff-media-placeholder h-48 w-full">Keine Vorschau</div>
                     )}
                     <div className="mt-4 grid gap-1">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">{item.category ?? 'general'}</p>
+                      <p className="ff-label">{item.category ?? 'general'}</p>
                       <h4 className="text-base font-semibold text-neutral-900">{item.filename}</h4>
                       <p className="line-clamp-2 text-sm text-neutral-600">{item.alt}</p>
                       <p className="text-xs text-neutral-500">
@@ -394,7 +394,7 @@ export default async function ManageMediaPage({ searchParams }: Props) {
               <>
                 {selectedMedia.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img alt={selectedMedia.alt} className="h-64 w-full rounded-[1.2rem] object-cover" src={selectedMedia.url} />
+                  <img alt={selectedMedia.alt} className="h-64 w-full rounded-xl object-cover" src={selectedMedia.url} />
                 ) : null}
 
                 <form action={updateAction} className="ff-form-grid">
@@ -427,8 +427,8 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                   </button>
                 </form>
 
-                <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Dateiinfo</p>
+                <div className="rounded-xl border border-neutral-200 bg-white p-4">
+                  <p className="ff-label">Dateiinfo</p>
                   <div className="mt-3 grid gap-3 text-sm text-neutral-700">
                     <p>
                       <span className="font-semibold text-neutral-900">Auflösung:</span>{' '}
@@ -443,8 +443,8 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                   </div>
                 </div>
 
-                <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Verwendung</p>
+                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                  <p className="ff-label">Verwendung</p>
                   {usage.length > 0 ? (
                     <ul className="mt-3 grid gap-2 text-sm text-neutral-700">
                       {usage.map((entry) => (
@@ -461,7 +461,7 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                   )}
                 </div>
 
-                <form action={deleteAction} className="rounded-[1.2rem] border border-rose-200 bg-rose-50 p-4">
+                <form action={deleteAction} className="rounded-xl border border-status-danger-border bg-status-danger-bg p-4">
                   <input name="id" type="hidden" value={selectedMedia.id} />
                   <p className="text-sm font-semibold text-neutral-900">Sicher löschen</p>
                   <p className="mt-2 text-sm text-neutral-700">
@@ -470,13 +470,13 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                   <label className="mt-4 block">
                     <input className="ff-input" name="confirmDelete" placeholder="LOESCHEN" />
                   </label>
-                  <button className="ff-btn-ghost mt-4" type="submit">
+                  <button className="ff-btn-danger mt-4" type="submit">
                     Medium löschen
                   </button>
                 </form>
               </>
             ) : (
-              <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
+              <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
                 Kein Medium ausgewählt.
               </div>
             )}

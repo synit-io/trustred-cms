@@ -77,7 +77,7 @@ export default async function FaqIndexPage({ searchParams }: Props) {
               <label className="grid gap-2 text-sm font-semibold text-neutral-800">
                 Frage oder Stichwort
                 <input
-                  className="min-h-12 rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-[var(--brand-500)]"
+                  className="ff-input"
                   defaultValue={query}
                   name="q"
                   placeholder="z. B. Notruf, Mitgliedschaft, Einsatz"
@@ -87,7 +87,7 @@ export default async function FaqIndexPage({ searchParams }: Props) {
               <label className="grid gap-2 text-sm font-semibold text-neutral-800">
                 Thema
                 <select
-                  className="min-h-12 rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-[var(--brand-500)]"
+                  className="ff-input"
                   defaultValue={topic}
                   name="topic"
                 >

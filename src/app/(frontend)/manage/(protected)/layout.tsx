@@ -15,24 +15,26 @@ export default async function ManageProtectedLayout({ children }: { children: Re
   }
 
   return (
-    <div className="min-h-screen bg-[var(--surface-page)]">
-      <header className="border-b border-neutral-200 bg-white">
-        <div className="stripe-bg h-4" />
-        <div className="site-container-manage flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="ff-kicker">Trustred Redaktion</p>
-            <h1 className="text-3xl">Inhalte verwalten</h1>
-            <p className="mt-2 text-sm text-neutral-600">
-              Angemeldet als {user.displayName || user.email}
-            </p>
+    <div className="ff-theme min-h-screen bg-surface-page">
+      <div className="stripe-bg h-3" />
+      <header className="ff-header">
+        <div className="site-container-manage grid gap-4 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="ff-kicker mb-1">TrustRed Redaktion</p>
+              <h1 className="text-2xl">Inhalte verwalten</h1>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="hidden text-sm text-neutral-600 md:inline">
+                {user.displayName || user.email}
+              </span>
+              <Link className="ff-btn-manage-site min-h-10" href="/">
+                Zur Website
+              </Link>
+              <LogoutButton />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link className="ff-btn-manage-site mr-2" href="/">
-              Zur Seite
-            </Link>
-            <ManageNavigation permissions={permissions} />
-            <LogoutButton />
-          </div>
+          <ManageNavigation permissions={permissions} />
         </div>
       </header>
       <div className="site-container-manage py-8">{children}</div>

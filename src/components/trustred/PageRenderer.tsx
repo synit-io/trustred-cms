@@ -21,6 +21,7 @@ import {
   getPublicEquipmentById,
   getPublicEvents,
   getPublicOperations,
+  getSiteSettings,
   getWarningSettings,
 } from '@/lib/trustred/cms'
 import { sanitizeHtmlFragment } from '@/lib/trustred/html'
@@ -218,7 +219,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
     return (
       <article className="ff-card grid gap-4" key={index}>
         {image?.src ? (
-          <div className="overflow-hidden rounded-[1.2rem] border border-neutral-200">
+          <div className="overflow-hidden rounded-xl border border-neutral-200">
             <Image
               alt={image.alt}
               className="h-48 w-full object-cover"
@@ -262,7 +263,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
     return (
       <article className="ff-card grid gap-4" key={index}>
         {image?.src ? (
-          <div className="overflow-hidden rounded-[1.2rem] border border-neutral-200">
+          <div className="overflow-hidden rounded-xl border border-neutral-200">
             <Image
               alt={image.alt}
               className="h-48 w-full object-cover"
@@ -308,7 +309,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
     return (
       <article className="ff-card grid gap-4" key={index}>
         {portrait?.src ? (
-          <div className="overflow-hidden rounded-[1.2rem] border border-neutral-200">
+          <div className="overflow-hidden rounded-xl border border-neutral-200">
             <Image
               alt={portrait.alt}
               className="h-56 w-full object-cover"
@@ -348,7 +349,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
     return (
       <article className="ff-card grid gap-4" key={index}>
         {image?.src ? (
-          <div className="overflow-hidden rounded-[1.2rem] border border-neutral-200">
+          <div className="overflow-hidden rounded-xl border border-neutral-200">
             <Image
               alt={image.alt}
               className="h-48 w-full object-cover"
@@ -440,13 +441,16 @@ export async function PageRenderer({
       if (block.blockType === 'hero') {
         const heroBlock = block as unknown as HeroBlockData
         const mediaSrc = imageUrl(heroBlock.heroImage)
+        const emergencyNumber = mediaSrc
+          ? null
+          : ((await getSiteSettings()).contact?.emergencyNumber ?? '112')
 
         return (
           <section className="ff-section" key={index}>
             <div className="site-container grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
               <div>
                 {heroBlock.eyebrow ? <p className="ff-kicker">{heroBlock.eyebrow}</p> : null}
-                <h1 className="max-w-4xl text-5xl md:text-6xl">{heroBlock.headline}</h1>
+                <h1 className="max-w-4xl text-[clamp(2.25rem,4.5vw,3.75rem)]">{heroBlock.headline}</h1>
                 <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">
                   {heroBlock.copy}
                 </p>
@@ -461,7 +465,7 @@ export async function PageRenderer({
                   ) : null}
                 </div>
               </div>
-              <div className="rounded-[2rem] border border-white/70 bg-white p-4 shadow-[0_20px_60px_rgba(0,45,103,0.12)]">
+              <div className="rounded-2xl border border-border-subtle bg-white p-3 shadow-card">
                 {mediaSrc ? (
                   <Image
                     alt={
@@ -469,7 +473,7 @@ export async function PageRenderer({
                         ? heroBlock.heroImage.alt
                         : ''
                     }
-                    className="h-[26rem] w-full rounded-[1.5rem] object-cover"
+                    className="h-[26rem] w-full rounded-xl object-cover"
                     height={
                       typeof heroBlock.heroImage === 'object' &&
                       typeof heroBlock.heroImage?.height === 'number'
@@ -485,10 +489,16 @@ export async function PageRenderer({
                     }
                   />
                 ) : (
-                  <div className="flex h-[26rem] items-end rounded-[1.5rem] bg-[linear-gradient(160deg,rgba(135,29,51,0.16),rgba(255,255,255,0.92)),linear-gradient(0deg,rgba(17,24,39,0.28),rgba(17,24,39,0.04))] p-6">
-                    <div className="rounded-2xl border border-white/70 bg-white/85 p-5 backdrop-blur">
-                      <p className="ff-kicker">Trustred CMS</p>
-                      <p className="text-lg font-semibold text-neutral-900">Das Feuerwehr CMS.</p>
+                  <div className="ff-hero-fallback">
+                    <div className="stripe-bg absolute inset-x-0 top-0 h-3" />
+                    <div className="relative rounded-xl border border-white/70 bg-white/85 p-5 backdrop-blur">
+                      <p className="ff-kicker">Im Notfall</p>
+                      <p className="font-headline text-5xl leading-none text-neutral-900">
+                        {emergencyNumber}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-neutral-700">
+                        Bei akuter Gefahr sofort anrufen.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -505,10 +515,8 @@ export async function PageRenderer({
             <div className="site-container grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {statsBlock.items?.map((item, itemIndex) => (
                 <article className="ff-card" key={itemIndex}>
-                  <p className="font-headline text-4xl text-[var(--brand-500)]">{item.value}</p>
-                  <p className="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-neutral-600">
-                    {item.label}
-                  </p>
+                  <p className="font-headline text-4xl font-semibold text-neutral-900">{item.value}</p>
+                  <p className="mt-2 ff-label">{item.label}</p>
                 </article>
               ))}
             </div>
@@ -538,7 +546,7 @@ export async function PageRenderer({
               <h2 className="text-4xl">{linkGridBlock.headline}</h2>
               <div className="mt-8 ff-grid-3">
                 {linkGridBlock.links?.map((item, itemIndex) => (
-                  <Link className="ff-card block" href={item.href} key={itemIndex}>
+                  <Link className="ff-card ff-card--interactive block" href={item.href} key={itemIndex}>
                     <h3 className="text-xl">{item.label}</h3>
                     {item.description ? (
                       <p className="mt-3 text-sm text-neutral-600">{item.description}</p>
@@ -735,8 +743,8 @@ export async function PageRenderer({
                   {warningsBlock.intro ? (
                     <p className="mt-4 text-neutral-700">{warningsBlock.intro}</p>
                   ) : null}
-                  <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-                    <p className="text-sm font-semibold uppercase tracking-[0.12em] text-amber-800">
+                  <div className="mt-6 ff-tile">
+                    <p className="ff-label">
                       Region:{' '}
                       {String(
                         snapshot?.regionLabel ??
@@ -744,7 +752,7 @@ export async function PageRenderer({
                           warningsBlock.presetKey,
                       )}
                     </p>
-                    <p className="mt-2 text-sm text-amber-900">
+                    <p className="mt-2 text-sm text-neutral-600">
                       Stand:{' '}
                       {warningsBlock.provider === 'dwd'
                         ? (snapshot?.dwdWeather?.updatedLabel ?? 'Nicht verfügbar')
@@ -754,17 +762,15 @@ export async function PageRenderer({
                     </p>
                     {warningsBlock.provider === 'dwd' ? (
                       <div className="mt-4 grid gap-4">
-                        <div className="rounded-xl border border-amber-200 bg-white px-4 py-4">
-                          <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-amber-800">
-                            DWD Snapshot
-                          </p>
+                        <div className="rounded-xl border border-border-subtle bg-white px-4 py-4">
+                          <p className="ff-label">DWD Snapshot</p>
                           <p className="mt-2 font-semibold text-neutral-900">
                             {snapshot?.dwdWeather?.warningHeadline ??
                               'Aktuelle Wetter- und Warnlage'}
                           </p>
                           <div className="mt-4 grid gap-4">
                             <div>
-                              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                              <p className="ff-label">
                                 Kurzlage
                               </p>
                               <p className="mt-2 text-sm text-neutral-700">
@@ -773,7 +779,7 @@ export async function PageRenderer({
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                              <p className="ff-label">
                                 Ausblick
                               </p>
                               <p className="mt-2 text-sm text-neutral-700">
@@ -787,10 +793,10 @@ export async function PageRenderer({
                           <ul className="grid gap-3 text-sm text-neutral-700">
                             {snapshot.entries.map((item, itemIndex) => (
                               <li
-                                className="rounded-xl border border-amber-200 bg-white px-4 py-3"
+                                className="rounded-xl border border-status-warning-border bg-status-warning-bg px-4 py-3"
                                 key={`${item.headline}-${itemIndex}`}
                               >
-                                <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-amber-800">
+                                <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-status-warning-fg">
                                   {severityLabel(item.severity)} · {item.tag || item.source}
                                 </p>
                                 <p className="mt-2 font-semibold text-neutral-900">
@@ -803,15 +809,13 @@ export async function PageRenderer({
                             ))}
                           </ul>
                         ) : (
-                          <div className="rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-neutral-700">
+                          <div className="ff-callout ff-callout--success">
                             Aktuell liegen keine amtlichen DWD-Warnmeldungen für diese Region vor.
                           </div>
                         )}
                         {ninaSnapshot ? (
-                          <div className="rounded-xl border border-amber-200 bg-white px-4 py-4">
-                            <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-amber-800">
-                              NINA Ergänzung
-                            </p>
+                          <div className="rounded-xl border border-border-subtle bg-white px-4 py-4">
+                            <p className="ff-label">NINA Ergänzung</p>
                             <p className="mt-2 font-semibold text-neutral-900">
                               Ergänzende Bevölkerungswarnungen für {ninaSnapshot.regionLabel}
                             </p>
@@ -819,10 +823,10 @@ export async function PageRenderer({
                               <ul className="mt-4 grid gap-3 text-sm text-neutral-700">
                                 {ninaSnapshot.entries.map((item, itemIndex) => (
                                   <li
-                                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                                    className="rounded-xl border border-status-warning-border bg-status-warning-bg px-4 py-3"
                                     key={`nina-extra-${item.headline}-${itemIndex}`}
                                   >
-                                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-amber-800">
+                                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-status-warning-fg">
                                       {severityLabel(item.severity)} · {item.tag || item.source}
                                     </p>
                                     <p className="mt-2 font-semibold text-neutral-900">
@@ -847,10 +851,10 @@ export async function PageRenderer({
                       <ul className="mt-4 grid gap-3 text-sm text-neutral-700">
                         {snapshot.entries.map((item, itemIndex) => (
                           <li
-                            className="rounded-xl border border-amber-200 bg-white px-4 py-3"
+                            className="rounded-xl border border-status-warning-border bg-status-warning-bg px-4 py-3"
                             key={`${item.headline}-${itemIndex}`}
                           >
-                            <p className="text-[0.7rem] font-bold uppercase tracking-[0.12em] text-amber-800">
+                            <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-status-warning-fg">
                               {severityLabel(item.severity)} · {item.tag || item.source}
                             </p>
                             <p className="mt-2 font-semibold text-neutral-900">{item.headline}</p>
@@ -862,7 +866,7 @@ export async function PageRenderer({
                             ) : null}
                             {item.detailUrl ? (
                               <a
-                                className="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.1em] text-[var(--brand-500)]"
+                                className="ff-btn-tertiary mt-1 min-h-9"
                                 href={item.detailUrl}
                                 rel="noreferrer"
                                 target="_blank"
@@ -874,7 +878,7 @@ export async function PageRenderer({
                         ))}
                       </ul>
                     ) : (
-                      <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                      <div className="ff-callout ff-callout--success mt-4">
                         Aktuell liegen keine Warnmeldungen für diese Konfiguration vor.
                       </div>
                     )}
@@ -1000,7 +1004,7 @@ export async function PageRenderer({
                   title={techDetailsBlock.headline}
                 />
               ) : (
-                <div className="ff-card border-amber-200 bg-amber-50 text-sm text-amber-950">
+                <div className="ff-callout ff-callout--warning">
                   Für diesen Technik-Block ist noch kein Fahrzeug oder Gerät ausgewählt.
                 </div>
               )}
@@ -1081,7 +1085,7 @@ export async function PageRenderer({
         return (
           <section className="ff-section" key={index}>
             <div
-              className="site-container prose prose-neutral max-w-none rounded-[2rem] border border-neutral-200 bg-white p-8 shadow-sm"
+              className="site-container prose prose-neutral max-w-none rounded-2xl border border-border-subtle bg-white p-6 shadow-card md:p-8"
               dangerouslySetInnerHTML={{ __html: sanitizeHtmlFragment(htmlBlock.html) }}
             />
           </section>

@@ -37,7 +37,7 @@ export async function PageFormBlock({ block, index, pathname, submittedForm }: P
     return (
       <section className="ff-section">
         <div className="site-container">
-          <div className="ff-card border-amber-200 bg-amber-50 text-sm text-amber-950">
+          <div className="ff-callout ff-callout--warning">
             Für diesen Formular-Block ist noch kein Formular ausgewählt.
           </div>
         </div>
@@ -51,7 +51,7 @@ export async function PageFormBlock({ block, index, pathname, submittedForm }: P
     return (
       <section className="ff-section">
         <div className="site-container">
-          <div className="ff-card border-amber-200 bg-amber-50 text-sm text-amber-950">
+          <div className="ff-callout ff-callout--warning">
             Das ausgewählte Formular konnte nicht geladen werden.
           </div>
         </div>
@@ -83,7 +83,7 @@ export async function PageFormBlock({ block, index, pathname, submittedForm }: P
 
         <div className="grid gap-4">
           {isSubmitted ? (
-            <div className="rounded-[1.2rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <div className="ff-callout ff-callout--success">
               {successMessage}
             </div>
           ) : null}

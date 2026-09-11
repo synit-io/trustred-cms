@@ -36,7 +36,7 @@ export function EquipmentDetailSection({
       <article className="grid gap-6 lg:grid-cols-[minmax(20rem,0.95fr)_minmax(0,1.25fr)] lg:items-start xl:grid-cols-[minmax(24rem,1.05fr)_minmax(0,1.2fr)]">
         <div className="ff-card min-w-0">
           {image?.src ? (
-            <div className="overflow-hidden rounded-[1.4rem] border border-neutral-200">
+            <div className="overflow-hidden rounded-2xl border border-neutral-200">
               <Image
                 alt={image.alt}
                 className="h-[24rem] w-full object-cover lg:h-[30rem]"
@@ -56,7 +56,7 @@ export function EquipmentDetailSection({
             <h2 className="max-w-full break-words [hyphens:auto] [overflow-wrap:anywhere] text-[clamp(2rem,5vw,4rem)]">
               {title || item.name}
             </h2>
-            <p className="mt-4 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--brand-500)]">
+            <p className="mt-4 text-sm font-semibold text-brand-700">
               Funkrufname: {item.callSign || 'Nicht hinterlegt'}
             </p>
             <p className="mt-4 text-base leading-8 text-neutral-700">{intro || item.summary}</p>
@@ -65,14 +65,14 @@ export function EquipmentDetailSection({
           {facts.length > 0 ? (
             <div className="grid gap-3">
               {facts.map((fact, index) => (
-                <div className="rounded-[1rem] border border-rose-100 bg-rose-50/35 p-4" key={`equipment-fact-${index}`}>
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">{fact.label}</p>
+                <div className="ff-tile" key={`equipment-fact-${index}`}>
+                  <p className="ff-label">{fact.label}</p>
                   <p className="mt-2 text-sm leading-7 text-neutral-800">{fact.value}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-[1rem] border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
+            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
               Für dieses Technikprofil sind noch keine öffentlichen Kerndaten hinterlegt.
             </div>
           )}
@@ -112,7 +112,7 @@ export function EquipmentDetailSection({
                       {compartmentImage?.src ? (
                         <Image
                           alt={compartmentImage.alt}
-                          className="mb-4 h-40 w-full rounded-[1.2rem] object-cover"
+                          className="mb-4 h-40 w-full rounded-xl object-cover"
                           height={compartmentImage.height}
                           src={compartmentImage.src}
                           width={compartmentImage.width}

@@ -68,7 +68,7 @@ export default async function OperationDetailPage({ params }: Props) {
     <SiteShell pathname="/einsaetze" settings={settings}>
       <section className="ff-section">
         <div className="site-container">
-          <article className="mx-auto grid max-w-5xl gap-6 rounded-[1.6rem] border border-neutral-200 bg-white p-4 shadow-[0_12px_30px_rgba(0,45,103,0.08)] sm:p-6">
+          <article className="mx-auto grid max-w-5xl gap-6 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">
@@ -96,12 +96,12 @@ export default async function OperationDetailPage({ params }: Props) {
 
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
               <div className="space-y-4">
-                <section className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+                <section className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
                   <p className="ff-kicker mb-0">Einsatzbericht</p>
                   <p className="mt-3 text-base leading-8 text-neutral-800">{operation.summary}</p>
                 </section>
 
-                <section className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+                <section className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
                   <h2 className="text-lg">Weitere Informationen</h2>
                   <p className="mt-3 text-sm leading-7 text-neutral-700">
                     {operation.details?.trim()
@@ -110,10 +110,10 @@ export default async function OperationDetailPage({ params }: Props) {
                   </p>
                 </section>
 
-                <section className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+                <section className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
                   <h2 className="text-lg">Medien</h2>
                   {operationImage?.src ? (
-                    <div className="mt-3 overflow-hidden rounded-[1rem] border border-neutral-200 bg-white">
+                    <div className="mt-3 overflow-hidden rounded-xl border border-neutral-200 bg-white">
                       <Image
                         alt={operationImage.alt}
                         className="h-64 w-full object-cover"
@@ -133,12 +133,12 @@ export default async function OperationDetailPage({ params }: Props) {
               </div>
 
               <aside
-                className={`rounded-[1.2rem] border border-neutral-200 p-4 ${operationMeta.rowClass}`}
+                className={`rounded-xl border border-neutral-200 bg-neutral-50 p-4 ${operationMeta.rowClass}`.trim()}
               >
                 <h2 className="text-xl">Einsatzdaten</h2>
                 <div className="mt-3 grid gap-3">
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Kategorie
                     </p>
                     <div className="mt-2">
@@ -146,31 +146,31 @@ export default async function OperationDetailPage({ params }: Props) {
                     </div>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Datum
                     </p>
                     <p className="mt-1 text-sm text-neutral-800">{operationDateLabel}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Uhrzeit
                     </p>
                     <p className="mt-1 text-sm text-neutral-800">{operationTimeLabel}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Stichwort
                     </p>
                     <p className="mt-1 text-sm text-neutral-800">{operation.alarmCode}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Einsatzort
                     </p>
                     <p className="mt-1 text-sm text-neutral-800">{operation.location}</p>
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Eingesetzte Einheiten
                     </p>
                     {resolvedUnitsInvolved.length > 0 ? (
@@ -184,7 +184,7 @@ export default async function OperationDetailPage({ params }: Props) {
                     )}
                   </div>
                   <div className="rounded-lg border border-neutral-200 bg-white px-3 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-neutral-500">
+                    <p className="ff-label">
                       Nächster Schritt
                     </p>
                     <p className="mt-2 text-sm leading-7 text-neutral-700">
@@ -204,7 +204,7 @@ export default async function OperationDetailPage({ params }: Props) {
               </aside>
             </div>
 
-            <section className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+            <section className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
               <h2 className="text-lg">Teilen</h2>
               <p className="mt-2 text-sm text-neutral-600">
                 Direktlink kopieren oder den Einsatzbericht weitergeben.

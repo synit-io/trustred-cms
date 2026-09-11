@@ -58,7 +58,7 @@ export default async function JoinPage({ searchParams }: Props) {
           <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
             <aside className="grid gap-4">
               <article className="ff-card">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">So läuft der Einstieg</p>
+                <p className="ff-label">So läuft der Einstieg</p>
                 <ul className="ff-feature-list mt-4">
                   <li>
                     <strong>Unverbindlich starten</strong>
@@ -76,10 +76,10 @@ export default async function JoinPage({ searchParams }: Props) {
               </article>
 
               <article className="ff-card">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Nächste Termine</p>
+                <p className="ff-label">Nächste Termine</p>
                 <div className="mt-4 grid gap-3">
                   {upcomingEvents.map((event) => (
-                    <Link className="rounded-[1.1rem] border border-neutral-200 bg-neutral-50 px-4 py-4 transition hover:border-[var(--brand-500)] hover:bg-white" href={getEventPath(event.slug)} key={event.id}>
+                    <Link className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 transition hover:border-[var(--brand-500)] hover:bg-white" href={getEventPath(event.slug)} key={event.id}>
                       <strong className="block text-neutral-900">{event.title}</strong>
                       <span className="mt-2 block text-sm leading-6 text-neutral-600">
                         {formatDateTime(event.startsAt)} · {event.location}
@@ -92,7 +92,7 @@ export default async function JoinPage({ searchParams }: Props) {
 
             <div className="grid gap-4">
               {sent === '1' ? (
-                <div className="rounded-[1.2rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="ff-callout ff-callout--success">
                   {config.successMessage}
                 </div>
               ) : null}

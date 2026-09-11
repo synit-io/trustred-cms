@@ -8,6 +8,8 @@ import {
   saveSiteSettings,
   sendSmtpTestEmail,
 } from '@/lib/trustred/editorial'
+import { MediaSelectField } from '@/components/trustred/editorial/MediaSelectField'
+import { toRelationId } from '@/lib/trustred/page-builder'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
@@ -26,9 +28,25 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
     redirect('/manage')
   }
 
-  const settings = (await payload.findGlobal({
-    slug: 'site-settings',
-  })) as SiteSetting
+  const [settings, mediaLibrary] = await Promise.all([
+    payload.findGlobal({
+      slug: 'site-settings',
+    }) as Promise<SiteSetting>,
+    payload.find({
+      collection: 'media',
+      limit: 100,
+      overrideAccess: false,
+      sort: '-updatedAt',
+      user,
+    }),
+  ])
+  const mediaOptions = mediaLibrary.docs.map((item) => ({
+    alt: item.alt,
+    category: item.category,
+    filename: item.filename ?? `media-${item.id}`,
+    id: item.id,
+    url: item.thumbnailURL ?? item.url ?? null,
+  }))
   const resolvedSearchParams = (await searchParams) ?? {}
   const smtpStatus = readSearchValue(resolvedSearchParams.smtpStatus)
   const smtpMessage = readSearchValue(resolvedSearchParams.smtpMessage)
@@ -82,10 +100,10 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
         <section
           className={`ff-card ${
             smtpStatus === 'error'
-              ? 'border-rose-200 bg-rose-50'
+              ? 'border-status-danger-border bg-status-danger-bg'
               : smtpStatus === 'warning'
-                ? 'border-amber-200 bg-amber-50'
-                : 'border-emerald-200 bg-emerald-50'
+                ? 'border-status-warning-border bg-status-warning-bg'
+                : 'border-status-success-border bg-status-success-bg'
           }`}
         >
           <p className="ff-kicker">Status</p>
@@ -187,6 +205,37 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
               defaultValue={String(settings.theme?.surfaceColor ?? '')}
               name="theme.surfaceColor"
             />
+          </label>
+        </div>
+      </section>
+
+      <section className="ff-card grid gap-4">
+        <div>
+          <p className="ff-kicker">Logo & Bildmarke</p>
+          <h3 className="text-2xl">Kopfzeile und Footer</h3>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            Ein hochgeladenes Logo ersetzt die Bildmarke neben dem Seitennamen. Empfohlen: PNG
+            oder JPG mit mindestens 160 px Höhe, quadratisch oder als Wort-Bild-Marke.
+          </p>
+        </div>
+        <div className="ff-form-grid md:grid-cols-2">
+          <MediaSelectField
+            defaultValue={toRelationId(settings.theme?.logo) ?? undefined}
+            hint="Wird im Header (44 px hoch) und im Footer angezeigt."
+            label="Logo"
+            name="theme.logo"
+            options={mediaOptions}
+          />
+          <label>
+            Bildmarke ohne Logo
+            <select
+              className="ff-input"
+              defaultValue={String(settings.theme?.brandMark ?? 'flame')}
+              name="theme.brandMark"
+            >
+              <option value="flame">Flamme in Brand-Farbe (Standard)</option>
+              <option value="none">Keine Bildmarke, nur Seitenname</option>
+            </select>
           </label>
         </div>
       </section>
@@ -347,7 +396,7 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
           </label>
         </div>
 
-        <details className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+        <details className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <summary className="cursor-pointer list-none font-semibold text-neutral-900">
             Erweiterte SMTP-Optionen
           </summary>
@@ -418,7 +467,7 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
         </div>
       </section>
 
-      <section className="ff-card grid gap-4 border-rose-200 bg-rose-50">
+      <section className="ff-card grid gap-4 border-status-danger-border">
         <div>
           <p className="ff-kicker">Demo Daten</p>
           <h3 className="text-2xl">Demo Daten löschen</h3>
@@ -428,7 +477,7 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
           </p>
         </div>
         <button
-          className="ff-btn-ghost w-fit border-rose-300 text-rose-800"
+          className="ff-btn-danger w-fit"
           formAction={clearDemoDataAction}
           type="submit"
         >

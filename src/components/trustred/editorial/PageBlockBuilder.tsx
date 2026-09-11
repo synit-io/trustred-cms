@@ -317,7 +317,7 @@ export function PageBlockBuilder({
           </div>
           {blockPalette.map((entry) => (
             <button
-              className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--brand-500)] hover:bg-white"
+              className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--brand-500)] hover:bg-white"
               key={entry.type}
               onClick={() => addBlock(entry.type)}
               type="button"
@@ -360,8 +360,8 @@ export function PageBlockBuilder({
             </div>
           </div>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)]">
-            <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+              <p className="ff-label">
                 Seitenvorlagen
               </p>
               <div className="mt-3 grid gap-2">
@@ -383,7 +383,7 @@ export function PageBlockBuilder({
             <LayoutGuidancePanel issues={pageGuidance} />
           </div>
           {blocks.length === 0 ? (
-            <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm text-neutral-600">
+            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm text-neutral-600">
               Noch keine Bloecke vorhanden. Fuege links den ersten Abschnitt hinzu.
             </div>
           ) : (
@@ -396,13 +396,13 @@ export function PageBlockBuilder({
                 return (
                   <div className="grid gap-3" key={block.id ?? `${block.blockType}-${index}`}>
                     <div
-                      className={`rounded-[1.2rem] border p-4 transition ${
+                      className={`rounded-xl border p-4 transition ${
                         dragOverIndex === index
                           ? 'ring-2 ring-[var(--brand-500)] ring-offset-2'
                           : ''
                       } ${
                         isSelected
-                          ? 'border-[var(--brand-500)] bg-rose-50/70 shadow-[0_12px_30px_rgba(135,29,51,0.12)]'
+                          ? 'border-[var(--brand-500)] bg-brand-50 shadow-card'
                           : 'border-neutral-200 bg-white'
                       }`}
                       draggable
@@ -443,12 +443,12 @@ export function PageBlockBuilder({
                               Drag & Drop aktiv
                             </p>
                             {validationIssues.length > 0 ? (
-                              <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-amber-800">
+                              <span className="rounded-full border border-status-warning-border bg-status-warning-bg px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-status-warning-fg">
                                 {validationIssues.length} Hinweis
                                 {validationIssues.length === 1 ? '' : 'e'}
                               </span>
                             ) : (
-                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                              <span className="rounded-full border border-status-success-border bg-status-success-bg px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-status-success-fg">
                                 Vollstaendig
                               </span>
                             )}
@@ -517,10 +517,10 @@ export function PageBlockBuilder({
             </p>
           </div>
           {selectedBlock ? (
-            <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
               <p className="ff-pill">{pageBlockLabels[selectedBlock.blockType]}</p>
               <div className="mt-4 grid gap-3 rounded-xl border border-neutral-200 bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                <p className="ff-label">
                   Block-Aktionen
                 </p>
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -551,7 +551,7 @@ export function PageBlockBuilder({
                 </div>
                 {selectedTemplates.length > 0 ? (
                   <div className="grid gap-2">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+                    <p className="ff-label">
                       Vorlagen
                     </p>
                     {selectedTemplates.map((template) => (
@@ -582,8 +582,8 @@ export function PageBlockBuilder({
                   updateBlock={updateBlock}
                 />
               </div>
-              <div className="mt-6 rounded-[1.2rem] border border-neutral-200 bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+              <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-4">
+                <p className="ff-label">
                   Schnellvorschau
                 </p>
                 <div className="mt-3">
@@ -597,7 +597,7 @@ export function PageBlockBuilder({
               </div>
             </div>
           ) : (
-            <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm text-neutral-600">
+            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm text-neutral-600">
               Waehle links einen Block aus, um seine Inhalte zu bearbeiten.
             </div>
           )}
@@ -613,7 +613,7 @@ export function PageBlockBuilder({
             bleibt nur als gezielte Notfallspur fuer komplexe Sonderanpassungen.
           </p>
         </div>
-        <details className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+        <details className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <summary className="cursor-pointer text-sm font-semibold text-neutral-700">
             Aktuelles Builder-Layout als JSON anzeigen
           </summary>
@@ -621,12 +621,12 @@ export function PageBlockBuilder({
             {liveLayoutJson}
           </pre>
         </details>
-        <details className="rounded-[1.2rem] border border-amber-200 bg-amber-50 p-4">
-          <summary className="cursor-pointer text-sm font-semibold text-amber-900">
+        <details className="rounded-xl border border-status-warning-border bg-status-warning-bg p-4">
+          <summary className="cursor-pointer text-sm font-semibold text-status-warning-fg">
             JSON Override nur als letzte Option öffnen
           </summary>
           <div className="mt-4 grid gap-3">
-            <p className="text-sm leading-7 text-amber-950">
+            <p className="text-sm leading-7 text-status-warning-fg">
               Erst Blocktyp ersetzen, Vorlagen anwenden oder die strukturierten Felder im Inspector
               nutzen. Nur wenn das bewusst nicht ausreicht, sollte hier ein vollständiges
               Layout-Override hinterlegt werden.
@@ -666,7 +666,7 @@ function HiddenBuilderInputs({ blocks }: { blocks: Page['layout'] }) {
 
 function InsertBlockMenu({ onInsert }: { onInsert: (type: PageBlockType) => void }) {
   return (
-    <details className="rounded-[1.1rem] border border-dashed border-neutral-300 bg-neutral-50/80 p-3">
+    <details className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50/80 p-3">
       <summary className="cursor-pointer text-sm font-semibold text-neutral-700">
         Block hier einfuegen
       </summary>
@@ -1219,7 +1219,7 @@ function InspectorFields({
           />
         </div>
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+          <p className="ff-label">
             Schnellbausteine
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -1422,7 +1422,7 @@ function InspectorFields({
           }
         />
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+          <p className="ff-label">
             Empfohlene Grundeinstellung
           </p>
           <p className="mt-2 text-sm leading-6 text-neutral-700">
@@ -1632,14 +1632,14 @@ function InspectorFields({
           }
         />
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+          <p className="ff-label">
             Preset-Modus
           </p>
           <p className="mt-2 text-sm leading-6 text-neutral-700">{presetModeLabel}</p>
         </div>
         {providerPresets.length > 0 ? (
           <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+            <p className="ff-label">
               Preset-Hilfe
             </p>
             <p className="mt-2 text-sm leading-6 text-neutral-700">
@@ -2806,7 +2806,7 @@ function getBlockTemplates(
         value: {
           blockType: 'html',
           label: 'Hinweisbox',
-          html: '<div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-6"><p class="ff-kicker">Hinweis</p><h2>Wichtige Information</h2><p class="mt-4">Nutze diesen Block nur für Sonderdarstellungen, die mit den vorhandenen strukturierten Blöcken nicht sinnvoll abbildbar sind.</p></div>',
+          html: '<div class="rounded-2xl border border-status-warning-border bg-status-warning-bg p-6"><p class="ff-kicker">Hinweis</p><h2>Wichtige Information</h2><p class="mt-4">Nutze diesen Block nur für Sonderdarstellungen, die mit den vorhandenen strukturierten Blöcken nicht sinnvoll abbildbar sind.</p></div>',
         },
       },
       {
@@ -2815,7 +2815,7 @@ function getBlockTemplates(
         value: {
           blockType: 'html',
           label: 'CTA Sonderlayout',
-          html: '<div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"><div><p class="ff-kicker">Mitmachen</p><h2>Unterstützung gesucht</h2><p class="mt-4">Dieses Sonderlayout eignet sich für begrenzte Kampagnen oder eine bewusst herausgehobene Aktionsfläche.</p></div><div class="rounded-[1.5rem] border border-neutral-200 bg-neutral-50 p-6"><p class="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Aktion</p><p class="mt-3">Kontaktdaten, Fristen oder Hinweise lassen sich hier gezielt ergänzen.</p></div></div>',
+          html: '<div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"><div><p class="ff-kicker">Mitmachen</p><h2>Unterstützung gesucht</h2><p class="mt-4">Dieses Sonderlayout eignet sich für begrenzte Kampagnen oder eine bewusst herausgehobene Aktionsfläche.</p></div><div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-6"><p class="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-500">Aktion</p><p class="mt-3">Kontaktdaten, Fristen oder Hinweise lassen sich hier gezielt ergänzen.</p></div></div>',
         },
       },
     ]
@@ -2827,7 +2827,7 @@ function getBlockTemplates(
 function LayoutGuidancePanel({ issues }: { issues: string[] }) {
   if (issues.length === 0) {
     return (
-      <div className="rounded-[1.2rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+      <div className="ff-callout ff-callout--success">
         Die Seitenstruktur wirkt stimmig: Einstieg, Orientierung und nächste Schritte sind aktuell
         gut abgedeckt.
       </div>
@@ -2835,11 +2835,11 @@ function LayoutGuidancePanel({ issues }: { issues: string[] }) {
   }
 
   return (
-    <div className="rounded-[1.2rem] border border-amber-200 bg-amber-50 p-4">
-      <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">
+    <div className="rounded-xl border border-status-warning-border bg-status-warning-bg p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.12em] text-status-warning-fg">
         Layout-Hinweise
       </p>
-      <ul className="mt-3 grid gap-2 text-sm text-amber-950">
+      <ul className="mt-3 grid gap-2 text-sm text-status-warning-fg">
         {issues.map((issue) => (
           <li key={issue}>- {issue}</li>
         ))}
@@ -2859,18 +2859,18 @@ function ValidationPanel({
 
   if (issues.length === 0) {
     return (
-      <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+      <div className="ff-callout ff-callout--success mt-4">
         Dieser Block ist fuer die aktuellen Pflichtfelder vollstaendig gepflegt.
       </div>
     )
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-      <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">
+    <div className="mt-4 rounded-xl border border-status-warning-border bg-status-warning-bg p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.12em] text-status-warning-fg">
         Offene Hinweise
       </p>
-      <ul className="mt-3 grid gap-2 text-sm text-amber-950">
+      <ul className="mt-3 grid gap-2 text-sm text-status-warning-fg">
         {issues.map((issue) => (
           <li key={issue}>- {issue}</li>
         ))}
@@ -2995,7 +2995,7 @@ function renderBlockPreview(
             className="rounded-xl border border-neutral-200 bg-neutral-50 p-4"
             key={`preview-stat-${index}`}
           >
-            <p className="font-headline text-3xl text-[var(--brand-500)]">{item.value}</p>
+            <p className="font-headline text-3xl font-semibold text-neutral-900">{item.value}</p>
             <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-neutral-600">
               {item.label}
             </p>
@@ -3068,7 +3068,7 @@ function renderBlockPreview(
   if (block.blockType === 'banner') {
     return (
       <div className="rounded-xl border border-neutral-200 bg-[linear-gradient(135deg,#0a0a0b,#1f1f24_55%,var(--brand-700))] p-4 text-white">
-        {block.label ? <p className="ff-kicker text-rose-200">{block.label}</p> : null}
+        {block.label ? <p className="ff-kicker text-brand-200">{block.label}</p> : null}
         <h4 className="text-xl">{block.title}</h4>
         <p className="mt-3 text-sm leading-7 text-neutral-200">{block.text}</p>
         <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold">
@@ -3091,9 +3091,9 @@ function renderBlockPreview(
     )
 
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+      <div className="rounded-xl border border-status-warning-border bg-status-warning-bg p-4">
         <h4 className="text-xl">{block.headline}</h4>
-        <p className="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-amber-800">
+        <p className="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-status-warning-fg">
           {block.provider.toUpperCase()} · {block.regionLabel || block.presetKey || 'Region offen'}
         </p>
         {selectedPreset ? (
@@ -3492,7 +3492,7 @@ function CheckboxField({
   onChange: (checked: boolean) => void
 }) {
   return (
-    <label className="inline-flex items-center gap-3 rounded-[1.1rem] border border-neutral-200 bg-neutral-50 px-4 py-4 text-sm font-semibold text-neutral-700">
+    <label className="inline-flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-sm font-semibold text-neutral-700">
       <input
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}

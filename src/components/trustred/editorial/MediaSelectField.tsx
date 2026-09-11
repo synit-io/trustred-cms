@@ -67,8 +67,8 @@ export function MediaSelectField(props: Props) {
         </Link>
       </div>
       {props.uploadFields ? (
-        <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">
+        <div className="rounded-xl border border-neutral-200 bg-white p-4">
+          <p className="ff-label">
             {props.uploadFields.label || 'Neues Medium direkt hochladen'}
           </p>
           <div className="mt-4 grid gap-4">
@@ -91,7 +91,7 @@ export function MediaSelectField(props: Props) {
         </div>
       ) : null}
       {selected ? (
-        <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4">
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <div className="flex flex-wrap items-start gap-4">
             {selected.url ? (
               <>
@@ -107,7 +107,7 @@ export function MediaSelectField(props: Props) {
           </div>
         </div>
       ) : (
-        <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 text-sm text-neutral-600">
           Noch kein Medium ausgewählt.
         </div>
       )}

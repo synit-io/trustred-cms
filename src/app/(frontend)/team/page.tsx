@@ -37,17 +37,17 @@ export default async function CrewIndexPage({ searchParams }: Props) {
 
           <div className="grid gap-4 md:grid-cols-3">
             <article className="ff-card">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Öffentliche Profile</p>
-              <p className="mt-3 font-headline text-4xl text-[var(--brand-500)]">{crew.length}</p>
+              <p className="ff-label">Öffentliche Profile</p>
+              <p className="mt-3 font-headline text-4xl font-semibold text-neutral-900">{crew.length}</p>
             </article>
             <article className="ff-card">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Rollen</p>
+              <p className="ff-label">Rollen</p>
               <p className="mt-3 text-sm leading-7 text-neutral-700">
                 Von Wehrführung über Ausbildung bis Geräte- und Einsatzschwerpunkte.
               </p>
             </article>
             <article className="ff-card">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Mitmachen</p>
+              <p className="ff-label">Mitmachen</p>
               <p className="mt-3 text-sm leading-7 text-neutral-700">
                 Wer das Team kennenlernen möchte, findet auf der Mitmachen-Seite den direkten Einstieg.
               </p>

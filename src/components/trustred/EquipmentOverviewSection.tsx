@@ -46,15 +46,15 @@ export function EquipmentOverviewSection({
       {showStats ? (
         <div className="grid gap-4 md:grid-cols-3">
           <article className="ff-card">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Öffentliche Technikprofile</p>
-            <p className="mt-3 font-headline text-4xl text-[var(--brand-500)]">{limitedEquipment.length}</p>
+            <p className="ff-label">Öffentliche Technikprofile</p>
+            <p className="mt-3 font-headline text-4xl font-semibold text-neutral-900">{limitedEquipment.length}</p>
           </article>
           <article className="ff-card">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Strukturierte Fakten</p>
-            <p className="mt-3 font-headline text-4xl text-[var(--brand-500)]">{totalFacts}</p>
+            <p className="ff-label">Strukturierte Fakten</p>
+            <p className="mt-3 font-headline text-4xl font-semibold text-neutral-900">{totalFacts}</p>
           </article>
           <article className="ff-card">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Darstellungsstil</p>
+            <p className="ff-label">Darstellungsstil</p>
             <p className="mt-3 text-sm leading-7 text-neutral-700">
               Technik mit Bild, Funkrufname und den wichtigsten einsatzrelevanten Eckdaten.
             </p>
@@ -69,8 +69,8 @@ export function EquipmentOverviewSection({
             <h3 className="text-[clamp(1.8rem,4vw,3rem)]">{featuredItem.name}</h3>
             <p className="mt-4 text-base leading-8 text-neutral-700">{featuredItem.summary}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className={getStatusBadgeClass('info')}>{featuredItem.callSign || 'Kein Funkrufname'}</span>
-              <span className={getStatusBadgeClass('warning')}>{(featuredItem.facts ?? []).length} Fakten</span>
+              <span className={getStatusBadgeClass('brand')}>{featuredItem.callSign || 'Kein Funkrufname'}</span>
+              <span className={getStatusBadgeClass('neutral')}>{(featuredItem.facts ?? []).length} Fakten</span>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link className="ff-btn-accent" href={getEquipmentPath(featuredItem.slug)}>
@@ -82,7 +82,7 @@ export function EquipmentOverviewSection({
             </div>
           </div>
           {getMediaImage(featuredItem.heroImage)?.src ? (
-            <div className="overflow-hidden rounded-[1.4rem] border border-neutral-200">
+            <div className="overflow-hidden rounded-2xl border border-neutral-200">
               <Image
                 alt={getMediaImage(featuredItem.heroImage)?.alt ?? ''}
                 className="h-80 w-full object-cover"
@@ -102,7 +102,7 @@ export function EquipmentOverviewSection({
           {overviewItems.map((item) => (
             <article className="ff-card grid gap-4" key={item.id}>
               {getMediaImage(item.heroImage)?.src ? (
-                <div className="overflow-hidden rounded-[1.3rem] border border-neutral-200">
+                <div className="overflow-hidden rounded-xl border border-neutral-200">
                   <Image
                     alt={getMediaImage(item.heroImage)?.alt ?? ''}
                     className="h-64 w-full object-cover"
@@ -115,8 +115,8 @@ export function EquipmentOverviewSection({
                 <MediaPlaceholder className="h-64 w-full" />
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <span className={getStatusBadgeClass('info')}>{item.callSign || 'Kein Funkrufname'}</span>
-                <span className={getStatusBadgeClass('warning')}>{(item.facts ?? []).length} Fakten</span>
+                <span className={getStatusBadgeClass('brand')}>{item.callSign || 'Kein Funkrufname'}</span>
+                <span className={getStatusBadgeClass('neutral')}>{(item.facts ?? []).length} Fakten</span>
               </div>
               <div>
                 <h3 className="text-2xl">{item.name}</h3>
@@ -126,7 +126,7 @@ export function EquipmentOverviewSection({
                 <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {(item.facts ?? []).slice(0, 3).map((fact, index) => (
                     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3" key={`equipment-preview-${item.id}-${index}`}>
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">{fact.label}</p>
+                      <p className="ff-label">{fact.label}</p>
                       <p className="mt-2 text-sm font-semibold text-neutral-900">{fact.value}</p>
                     </div>
                   ))}

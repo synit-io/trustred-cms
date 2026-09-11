@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { trustredRoles, userHasRole } from '@/access/hasRole'
 import { getPayloadClient } from '@/lib/trustred/cms'
 import { defaultSiteSettings } from '@/lib/trustred/defaults'
+import { toRelationId } from '@/lib/trustred/page-builder'
 import { saveSiteSettings, sendSmtpTestEmail } from '@/lib/trustred/editorial'
 import {
   canUseSetup,
@@ -50,10 +51,10 @@ function SetupProgress({ step }: { step: SetupStep }) {
     <ol className="grid gap-2 sm:grid-cols-5">
       {items.map((item, index) => (
         <li
-          className={`rounded-[1rem] border px-3 py-2 text-sm font-semibold ${
+          className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
             index <= currentIndex
-              ? 'border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-strong)]'
-              : 'border-neutral-200 bg-white text-neutral-500'
+              ? 'border-brand-200 bg-brand-50 text-brand-700'
+              : 'border-border-subtle bg-white text-neutral-500'
           }`}
           key={item.step}
         >
@@ -108,6 +109,16 @@ function HiddenSettingsFields({ settings }: { settings: SiteSetting }) {
         name="theme.surfaceColor"
         type="hidden"
         value={String(settings.theme?.surfaceColor ?? defaultSiteSettings.theme.surfaceColor)}
+      />
+      <input
+        name="theme.logo"
+        type="hidden"
+        value={String(toRelationId(settings.theme?.logo) ?? '')}
+      />
+      <input
+        name="theme.brandMark"
+        type="hidden"
+        value={String(settings.theme?.brandMark ?? 'flame')}
       />
       <input name="contact.address" type="hidden" value={String(settings.contact?.address ?? '')} />
       <input name="contact.email" type="hidden" value={String(settings.contact?.email ?? '')} />
@@ -316,8 +327,8 @@ export default async function SetupPage({ searchParams }: Props) {
           <section
             className={`ff-card ${
               status === 'warning'
-                ? 'border-amber-200 bg-amber-50'
-                : 'border-emerald-200 bg-emerald-50'
+                ? 'border-status-warning-border bg-status-warning-bg'
+                : 'border-status-success-border bg-status-success-bg'
             }`}
           >
             <p className="ff-kicker">Status</p>

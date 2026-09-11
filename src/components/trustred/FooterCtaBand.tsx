@@ -34,18 +34,20 @@ export function FooterCtaBand({ banners }: { banners: Banner[] }) {
   const activeBanner = banners[Math.min(activeIndex, banners.length - 1)]
 
   return (
-    <section className="mt-16 bg-[linear-gradient(135deg,#0a0a0b,#1f1f24_55%,var(--brand-700))] text-white">
+    <section className="ff-inverse ff-gradient-band mt-16">
+      <div className="stripe-bg h-3" />
       <div className="site-container grid gap-6 py-10 lg:grid-cols-[1.2fr_auto] lg:items-center">
         <div>
-          {activeBanner.label ? <p className="mb-2 font-headline text-xs uppercase tracking-[0.17em] text-rose-200">{activeBanner.label}</p> : null}
-          <h2 className="text-[clamp(1.6rem,4vw,2.8rem)]">{activeBanner.title}</h2>
-          <p className="mt-2 max-w-2xl text-neutral-200">{activeBanner.text}</p>
+          {activeBanner.label ? <p className="mb-2 font-headline text-xs uppercase tracking-[0.17em] text-brand-200">{activeBanner.label}</p> : null}
+          <h2 className="text-[clamp(1.6rem,4vw,2.6rem)]">{activeBanner.title}</h2>
+          <p className="mt-3 max-w-2xl text-lg leading-8 text-neutral-300">{activeBanner.text}</p>
           {shouldRotate ? (
             <div className="mt-4 flex flex-wrap gap-2">
               {banners.map((banner, index) => (
                 <button
                   aria-label={`CTA ${index + 1} anzeigen`}
-                  className={`h-2.5 w-8 rounded-full ${index === activeIndex ? 'bg-rose-200' : 'bg-white/25'}`}
+                  aria-pressed={index === activeIndex}
+                  className={`h-2 w-8 rounded-full ${index === activeIndex ? 'bg-white' : 'bg-white/30 hover:bg-white/50'}`}
                   key={banner.key}
                   onClick={() => setActiveIndex(index)}
                   type="button"
@@ -54,7 +56,7 @@ export function FooterCtaBand({ banners }: { banners: Banner[] }) {
             </div>
           ) : null}
         </div>
-        <div className="grid min-w-56 gap-2">
+        <div className="grid min-w-56 gap-2 lg:justify-items-end">
           <Link className="ff-btn-light" href={activeBanner.primaryHref}>
             {activeBanner.primaryLabel}
           </Link>

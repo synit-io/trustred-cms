@@ -61,7 +61,7 @@ export function getOperationMeta(category: string): OperationMeta {
       chipClass: 'ff-op-chip ff-op-chip--brand',
       key: 'brand',
       label: 'Brand',
-      rowClass: 'bg-rose-50/35',
+      rowClass: '',
     }
   }
 
@@ -70,7 +70,7 @@ export function getOperationMeta(category: string): OperationMeta {
       chipClass: 'ff-op-chip ff-op-chip--hilfe',
       key: 'hilfe',
       label: 'Technische Hilfe',
-      rowClass: 'bg-blue-50/35',
+      rowClass: '',
     }
   }
 
@@ -79,7 +79,7 @@ export function getOperationMeta(category: string): OperationMeta {
       chipClass: 'ff-op-chip ff-op-chip--wetter',
       key: 'wetter',
       label: 'Wetterlage',
-      rowClass: 'bg-amber-50/40',
+      rowClass: '',
     }
   }
 
@@ -87,6 +87,6 @@ export function getOperationMeta(category: string): OperationMeta {
     chipClass: 'ff-op-chip ff-op-chip--sonstiges',
     key: 'sonstiges',
     label: 'Sonstiges',
-    rowClass: 'bg-zinc-50/35',
+    rowClass: '',
   }
 }

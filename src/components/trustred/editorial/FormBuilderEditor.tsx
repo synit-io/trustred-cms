@@ -160,7 +160,7 @@ export function FormBuilderEditor({ initialEmails, initialFields }: Props) {
 
         <div className="grid gap-4">
           {fields.map((field, index) => (
-            <article className="rounded-[1.35rem] border border-neutral-200 bg-neutral-50 p-5" key={`${field.blockType}-${index}`}>
+            <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5" key={`${field.blockType}-${index}`}>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="ff-kicker">{fieldTypeLabels[field.blockType]}</p>
@@ -296,7 +296,7 @@ export function FormBuilderEditor({ initialEmails, initialFields }: Props) {
                     </label>
                     <div className="md:col-span-2 grid gap-3">
                       <div className="flex items-center justify-between">
-                        <p className="font-headline text-xs uppercase tracking-[0.08em] text-neutral-500">Optionen</p>
+                        <p className="ff-label">Optionen</p>
                         <button
                           className="ff-btn-ghost"
                           onClick={() =>
@@ -378,13 +378,13 @@ export function FormBuilderEditor({ initialEmails, initialFields }: Props) {
 
         <div className="grid gap-4">
           {emails.length === 0 ? (
-            <div className="rounded-[1.2rem] border border-dashed border-neutral-300 bg-neutral-50 px-4 py-5 text-sm text-neutral-600">
+            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-5 text-sm text-neutral-600">
               Aktuell sind keine Benachrichtigungs-E-Mails konfiguriert.
             </div>
           ) : null}
 
           {emails.map((email, index) => (
-            <article className="rounded-[1.35rem] border border-neutral-200 bg-neutral-50 p-5" key={`${email.subject}-${index}`}>
+            <article className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5" key={`${email.subject}-${index}`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="ff-kicker">E-Mail {index + 1}</p>

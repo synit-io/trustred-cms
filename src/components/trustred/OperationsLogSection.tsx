@@ -42,13 +42,13 @@ export function OperationsLogSection({
       {showStats ? (
         <div className="grid gap-4 md:grid-cols-4">
           <article className="ff-card">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Freigegebene Einsätze</p>
-            <p className="mt-3 font-headline text-4xl text-[var(--brand-500)]">{visibleOperations.length}</p>
+            <p className="ff-label">Freigegebene Einsätze</p>
+            <p className="mt-3 font-headline text-4xl font-semibold text-neutral-900">{visibleOperations.length}</p>
           </article>
           {[...categoryCounts.entries()].slice(0, 3).map(([label, count]) => (
             <article className="ff-card" key={label}>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">{label}</p>
-              <p className="mt-3 font-headline text-4xl text-[var(--brand-500)]">{count}</p>
+              <p className="ff-label">{label}</p>
+              <p className="mt-3 font-headline text-4xl font-semibold text-neutral-900">{count}</p>
             </article>
           ))}
         </div>

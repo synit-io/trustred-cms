@@ -59,7 +59,7 @@ export default async function CrewDetailPage({ params }: Props) {
           <article className="ff-card grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
             <aside className="grid gap-4">
               {portrait?.src ? (
-                <div className="overflow-hidden rounded-[1.4rem] border border-neutral-200">
+                <div className="overflow-hidden rounded-2xl border border-neutral-200">
                   <Image
                     alt={portrait.alt}
                     className="h-[28rem] w-full object-cover"
@@ -71,8 +71,8 @@ export default async function CrewDetailPage({ params }: Props) {
               ) : shouldShowImagePlaceholder(member) ? (
                 <MediaPlaceholder className="h-[28rem] w-full" label="Kein Portrait hinterlegt" />
               ) : null}
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Kurzprofil</p>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                <p className="ff-label">Kurzprofil</p>
                 <ul className="mt-4 grid gap-3 text-sm text-neutral-700">
                   <li><strong className="text-neutral-900">Rolle:</strong> {member.role}</li>
                   <li><strong className="text-neutral-900">Qualifikation:</strong> {member.qualification || 'Nicht öffentlich hinterlegt'}</li>
@@ -82,15 +82,15 @@ export default async function CrewDetailPage({ params }: Props) {
             </aside>
 
             <div className="grid gap-4">
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Schwerpunkt</p>
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="ff-label">Schwerpunkt</p>
                 <p className="mt-4 text-base leading-8 text-neutral-800">
                   {member.focus || 'Für dieses Profil wurden noch keine ausführlicheren öffentlichen Schwerpunktinformationen hinterlegt.'}
                 </p>
               </div>
 
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Skills</p>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                <p className="ff-label">Skills</p>
                 {(member.skills ?? []).length > 0 ? (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {(member.skills ?? []).map((skill, index) => (
@@ -106,8 +106,8 @@ export default async function CrewDetailPage({ params }: Props) {
                 )}
               </div>
 
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Nächster Schritt</p>
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="ff-label">Nächster Schritt</p>
                 <p className="mt-4 text-sm leading-7 text-neutral-700">
                   Wenn du das Team näher kennenlernen möchtest, findest du in der Teamübersicht weitere Profile oder kannst direkt unverbindlich Kontakt aufnehmen.
                 </p>

@@ -33,7 +33,7 @@ export function PublicForm({ action, className, description, form, hideHeader = 
 
             return (
               <div
-                className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700"
+                className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700"
                 key={`message-${index}`}
               >
                 {message || 'Hinweis'}
@@ -88,7 +88,7 @@ export function PublicForm({ action, className, description, form, hideHeader = 
           if (field.blockType === 'checkbox') {
             return (
               <label
-                className={`${widthClass} flex items-start gap-3 rounded-[1.1rem] border border-neutral-200 bg-neutral-50 px-4 py-4`}
+                className={`${widthClass} flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4`}
                 key={field.name}
               >
                 <input

@@ -64,7 +64,7 @@ export function TeamDirectorySection({ crew, eyebrow, headline, intro }: Props) 
                 return (
                   <article className="ff-card grid h-full content-start gap-4" key={member.id}>
                     {portrait?.src ? (
-                      <div className="overflow-hidden rounded-[1.3rem] border border-neutral-200">
+                      <div className="overflow-hidden rounded-xl border border-neutral-200">
                         <Image
                           alt={portrait.alt}
                           className="h-72 w-full object-cover"

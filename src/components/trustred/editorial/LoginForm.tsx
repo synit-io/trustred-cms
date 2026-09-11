@@ -48,7 +48,7 @@ export function LoginForm() {
         Passwort
         <input className="ff-input" name="password" required type="password" />
       </label>
-      {error ? <p className="text-sm font-semibold text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm font-semibold text-status-danger-fg">{error}</p> : null}
       <button className="ff-btn-accent w-fit" disabled={loading} type="submit">
         {loading ? 'Anmeldung...' : 'Anmelden'}
       </button>

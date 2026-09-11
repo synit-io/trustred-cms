@@ -1323,6 +1323,11 @@ export async function saveSiteSettings(payload: Payload, user: User, formData: F
     String(getLastFormValue(formData, 'smtp.port') ?? '').trim(),
     10,
   )
+  const themeLogoValue = Number.parseInt(
+    String(getLastFormValue(formData, 'theme.logo') ?? '').trim(),
+    10,
+  )
+  const themeLogoId = Number.isFinite(themeLogoValue) && themeLogoValue > 0 ? themeLogoValue : null
 
   return payload.updateGlobal({
     slug: 'site-settings',
@@ -1368,6 +1373,11 @@ export async function saveSiteSettings(payload: Payload, user: User, formData: F
       theme: {
         brandColor: String(getLastFormValue(formData, 'theme.brandColor') ?? '').trim(),
         brandColorStrong: String(getLastFormValue(formData, 'theme.brandColorStrong') ?? '').trim(),
+        brandMark:
+          String(getLastFormValue(formData, 'theme.brandMark') ?? '').trim() === 'none'
+            ? 'none'
+            : 'flame',
+        logo: themeLogoId,
         surfaceColor: String(getLastFormValue(formData, 'theme.surfaceColor') ?? '').trim(),
       },
     },

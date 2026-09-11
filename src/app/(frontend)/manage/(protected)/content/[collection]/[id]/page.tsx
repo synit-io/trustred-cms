@@ -295,7 +295,7 @@ function GenericEditorForm({
           Speichern
         </button>
         {!isNew ? (
-          <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+          <button className="ff-btn-danger" formAction={deleteAction} type="submit">
             Löschen
           </button>
         ) : null}
@@ -412,7 +412,7 @@ async function PageEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}
@@ -520,7 +520,7 @@ function EquipmentEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}
@@ -624,7 +624,7 @@ function PostEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}
@@ -737,7 +737,7 @@ function EventEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}
@@ -842,7 +842,7 @@ function OperationEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}
@@ -935,7 +935,7 @@ function CrewEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}
@@ -994,7 +994,7 @@ function FaqEditorForm({
             Speichern
           </button>
           {!isNew ? (
-            <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+            <button className="ff-btn-danger" formAction={deleteAction} type="submit">
               Löschen
             </button>
           ) : null}

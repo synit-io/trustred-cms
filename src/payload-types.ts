@@ -1596,6 +1596,14 @@ export interface SiteSetting {
     brandColor?: string | null;
     brandColorStrong?: string | null;
     surfaceColor?: string | null;
+    /**
+     * Optionales Logo für Header und Footer. Ohne Logo wird die Standard-Bildmarke verwendet.
+     */
+    logo?: (number | null) | Media;
+    /**
+     * Bildmarke, wenn kein Logo hochgeladen ist.
+     */
+    brandMark?: ('flame' | 'none') | null;
   };
   joinButton?: {
     label?: string | null;
@@ -1672,6 +1680,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         brandColor?: T;
         brandColorStrong?: T;
         surfaceColor?: T;
+        logo?: T;
+        brandMark?: T;
       };
   joinButton?:
     | T

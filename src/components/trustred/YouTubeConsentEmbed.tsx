@@ -57,7 +57,7 @@ export function YouTubeConsentEmbed({ title, videoIdOrUrl }: Props) {
 
   if (!videoId || !embedUrl) {
     return (
-      <div className="rounded-[1.2rem] border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-900">
+      <div className="rounded-xl border border-status-warning-border bg-status-warning-bg p-5 text-sm leading-7 text-status-warning-fg">
         Ungueltige YouTube-URL oder Video-ID. Bitte im Seitenbuilder eine gueltige YouTube-Adresse
         eintragen.
       </div>
@@ -66,7 +66,7 @@ export function YouTubeConsentEmbed({ title, videoIdOrUrl }: Props) {
 
   if (!hasMediaConsent) {
     return (
-      <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-6">
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-6">
         <p className="ff-kicker">Externer Inhalt</p>
         <h3 className="text-xl">YouTube-Video ist datenschutzgeschuetzt blockiert</h3>
         <p className="mt-3 text-sm leading-7 text-neutral-700">

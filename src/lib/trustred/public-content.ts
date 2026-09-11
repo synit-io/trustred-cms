@@ -22,10 +22,8 @@ export function getPostCategoryBadgeClass(category?: string | null) {
     .trim()
     .toLowerCase()
 
-  if (normalized.includes('einsatz')) return 'ff-pill ff-pill--warning'
-  if (normalized.includes('jugend')) return 'ff-pill ff-pill--info'
-  if (normalized.includes('oeffentlich')) return 'ff-pill ff-pill--brand'
-  return 'ff-pill ff-pill--team'
+  if (normalized.includes('einsatz')) return 'ff-pill ff-pill--brand'
+  return 'ff-pill'
 }
 
 export function getEventTypeBadgeClass(type?: string | null) {
@@ -34,17 +32,15 @@ export function getEventTypeBadgeClass(type?: string | null) {
     .toLowerCase()
 
   if (normalized.includes('oeffentlich')) return 'ff-pill ff-pill--brand'
-  if (normalized.includes('jugend')) return 'ff-pill ff-pill--info'
-  if (normalized.includes('uebung')) return 'ff-pill ff-pill--warning'
-  return 'ff-pill ff-pill--team'
+  return 'ff-pill'
 }
 
 export function getDateBadgeClass() {
-  return 'ff-pill ff-pill--published'
+  return 'ff-pill ff-pill--neutral'
 }
 
 export function getStatusBadgeClass(
-  tone: 'brand' | 'info' | 'neutral' | 'published' | 'team' | 'warning',
+  tone: 'brand' | 'danger' | 'info' | 'neutral' | 'published' | 'team' | 'warning',
 ) {
   return `ff-pill ff-pill--${tone}`
 }

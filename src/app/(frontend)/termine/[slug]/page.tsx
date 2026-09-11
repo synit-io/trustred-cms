@@ -54,7 +54,7 @@ export default async function EventDetailPage({ params }: Props) {
               </div>
 
             {eventImage?.src ? (
-              <div className="overflow-hidden rounded-[1.4rem] border border-neutral-200">
+              <div className="overflow-hidden rounded-2xl border border-neutral-200">
                 <Image
                   alt={eventImage.alt}
                   className="h-[18rem] w-full object-cover md:h-[24rem]"
@@ -66,14 +66,14 @@ export default async function EventDetailPage({ params }: Props) {
             ) : null}
 
               <div className="grid gap-4">
-                <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Hinweise zum Termin</p>
+                <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                  <p className="ff-label">Hinweise zum Termin</p>
                   <p className="mt-4 text-base leading-8 text-neutral-800">
                     {event.summary || 'Für diesen Termin sind aktuell keine zusätzlichen öffentlichen Hinweise hinterlegt.'}
                   </p>
                 </div>
-                <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Organisation</p>
+                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                  <p className="ff-label">Organisation</p>
                   <p className="mt-3 text-sm leading-7 text-neutral-700">
                     Nutze den Kalendereintrag für deine persönliche Planung. Bei Rückfragen oder organisatorischem Bedarf erreichst du die Wehr über den Kontaktbereich.
                   </p>
@@ -81,24 +81,24 @@ export default async function EventDetailPage({ params }: Props) {
                 </div>
               </div>
             <aside className="order-1 grid gap-4 xl:order-2 xl:sticky xl:top-6">
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Zeitpunkt</p>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                <p className="ff-label">Zeitpunkt</p>
                 <p className="mt-3 text-base font-semibold text-neutral-900">{formatDateTimeRange(event.startsAt, event.endsAt)}</p>
               </div>
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Ort</p>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                <p className="ff-label">Ort</p>
                 <p className="mt-3 text-base font-semibold text-neutral-900">{event.location}</p>
               </div>
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Teilnahme</p>
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="ff-label">Teilnahme</p>
                 <p className="mt-3 text-sm leading-7 text-neutral-700">
                   {event.registrationEnabled
                     ? 'Für diesen Termin ist eine Anmeldung vorgesehen. Die organisatorische Abstimmung erfolgt intern oder über den veröffentlichten Hinweis.'
                     : 'Dieser öffentliche Termin kommt ohne gesonderte Anmeldung aus, sofern vor Ort nichts anderes kommuniziert wird.'}
                 </p>
               </div>
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-neutral-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Nächster Schritt</p>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+                <p className="ff-label">Nächster Schritt</p>
                 <div className="mt-4 grid gap-3">
                   <Link className="ff-btn-ghost" href={`/termine/${encodeURIComponent(event.slug)}/ics`}>
                     Zum Kalendar hinzufügen
@@ -108,8 +108,8 @@ export default async function EventDetailPage({ params }: Props) {
                   </Link>
                 </div>
               </div>
-              <div className="rounded-[1.2rem] border border-neutral-200 bg-white p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Teilen</p>
+              <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <p className="ff-label">Teilen</p>
                 <p className="mt-3 text-sm leading-7 text-neutral-700">
                   Termin direkt weitergeben oder in den privaten Planungsfluss übernehmen.
                 </p>

@@ -58,7 +58,7 @@ export default async function PostsIndexPage({ searchParams }: Props) {
           {leadPost ? (
             <article className="ff-card grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
               {leadImage?.src ? (
-                <div className="overflow-hidden rounded-[1.6rem] border border-neutral-200">
+                <div className="overflow-hidden rounded-2xl border border-neutral-200">
                   <Image
                     alt={leadImage.alt}
                     className="h-[24rem] w-full object-cover"
@@ -124,7 +124,7 @@ export default async function PostsIndexPage({ searchParams }: Props) {
                         <p className="mt-3 max-w-2xl text-sm leading-7 text-neutral-700">{post.excerpt}</p>
                       </div>
                       {getMediaImage(post.featuredImage)?.src ? (
-                        <div className="overflow-hidden rounded-[1.1rem] border border-neutral-200">
+                        <div className="overflow-hidden rounded-xl border border-neutral-200">
                           <Image
                             alt={getMediaImage(post.featuredImage)?.alt ?? ''}
                             className="h-28 w-full object-cover"

@@ -127,7 +127,7 @@ export default async function ManageFormEditorPage({ params }: Props) {
               Speichern
             </button>
             {!isNew ? (
-              <button className="ff-btn-ghost" formAction={deleteAction} type="submit">
+              <button className="ff-btn-danger" formAction={deleteAction} type="submit">
                 Löschen
               </button>
             ) : null}
