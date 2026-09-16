@@ -13,10 +13,12 @@ deployment in one application.
 
 **Free for noncommercial use. Source-available. Self-hostable.**
 
-[TrustRed by synit.io](https://www.synit.io/products/trustred) ·
+[🌐 TrustRed by synit.io](https://www.synit.io/products/trustred) ·
 [Live demo](https://demo-cms.trust-red.de/) ·
-[Docker Hub](https://hub.docker.com/r/synitio/trustred-cms) ·
-[Documentation](docs/README.md) · [License](LICENSE)
+[🐳 Docker Hub](https://hub.docker.com/r/synitio/trustred-cms) ·
+[📖 Documentation](docs/README.md) ·
+[⚖️ License](LICENSE) ·
+[👥 Discord Community](https://www.synit.io/discord)
 
 ---
 
