@@ -24,7 +24,7 @@
     "verify:starter": "cross-env NODE_OPTIONS=--no-deprecation node --import=tsx/esm ./scripts/verify-starter-content.ts"
   },
   "dependencies": {
-    "@payloadcms/db-sqlite": "3.89.0",
+    "@payloadcms/db-sqlite": "3.90.2",
     "@payloadcms/next": "3.89.0",
     "@payloadcms/plugin-form-builder": "3.89.0",
     "@payloadcms/plugin-nested-docs": "3.89.0",
