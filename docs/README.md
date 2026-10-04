@@ -9,6 +9,9 @@ commercial licensing are available from synit.io.
 
 - [Architecture](ARCHITECTURE.md)
 - [Development](DEVELOPMENT.md)
+- [HTTP API](API.md)
+- [Contribution guide](../CONTRIBUTING.md)
+- [Changelog](../CHANGELOG.md)
 - [Self-hosting and Docker deployment](DEPLOYMENT.md)
 - [Frontend design specification](DESIGN_GUIDE.md)
 

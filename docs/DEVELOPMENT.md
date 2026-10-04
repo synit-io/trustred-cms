@@ -12,7 +12,7 @@ rules for contributors.
 Use the project Node installation before running Node-based commands:
 
 ```bash
-export PATH="$HOME/.nvm/versions/node/v24.14.1/bin:$PATH"
+export PATH="$HOME/.nvm/versions/node/v24.21.0/bin:$PATH"
 ```
 
 ## Install dependencies
@@ -22,16 +22,32 @@ npm ci
 ```
 
 Keep `payload` and all direct `@payloadcms/*` dependencies on the same stable
-release, currently `3.89.0`. Next.js `16.3.4` and React `19.3.0` satisfy this
+release, currently `3.90.2`. Next.js `16.3.8` and React `19.3.0` satisfy this
 release's peer requirements. The remaining compatibility constraints are:
 
 - GraphQL stays on `16.x`, as required by Payload.
 - ESLint stays on `9.x` because `eslint-plugin-react` does not support ESLint 10.
   ESLint 9 is stable but is marked unsupported upstream.
 - TypeScript stays on `6.0.x` because TypeScript-ESLint requires `<6.1.0`.
-- pnpm stays on `11.x`, within the project's declared package manager range.
-- jsdom stays on `29.1.1`; jsdom 30 requires a newer Node 24 patch than `.nvmrc`.
-- Node type definitions stay on `24.x` to match the project's runtime.
+- npm is the package manager used by the lockfile and CI.
+- jsdom `30.1.2` requires Node `^22.22.2 || ^24.15.0 || >=26`; `.nvmrc` selects
+  the installed Node `24.21.0` release.
+- Node type definitions currently use `26.x`; avoid using runtime APIs absent
+  from supported Node 22/24 installations. Docker uses Node `26.10.0`.
+- The optional pnpm dependency uses `12.x`; npm remains the installation and CI
+  workflow. The package engine accepts pnpm 9 through 12.
+
+The 2026-10-04 dependency refresh updates all direct packages that fit these
+constraints and refreshes compatible transitive dependencies. Dotenv `18.0.5`
+retains the project's `import 'dotenv/config'` loading path; this project does
+not use its removed `.env.vault` support. Payload's scoped Undici override stays
+on the supported 7.x line, now `7.30.0`, rather than forcing Undici 8 into Payload.
+
+Payload 3.90 adds an authentication field for password-reset throttling. Run the
+committed migrations before serving an existing database with the new version.
+The migration preserves existing users and sessions. See the
+[Payload 3.90 upgrade notes](https://github.com/payloadcms/payload/releases/tag/v3.90.0)
+for the related authentication and upload security changes.
 
 Direct dependencies use stable releases. Upstream dependencies still require
 `body-scroll-lock@4.0.0-beta.0`, `gensync@1.0.0-beta.2`, and
@@ -128,7 +144,7 @@ Optional overrides:
 
 ```dotenv
 TRUSTRED_EDITOR_EMAIL=editor@example.com
-TRUSTRED_EDITOR_PASSWORD=change-me
+TRUSTRED_EDITOR_PASSWORD=change-this-development-password
 ```
 
 `seed:user` and all example credentials are for local development only. Never use
@@ -140,6 +156,7 @@ development credentials on an internet-facing installation.
 npm run dev
 npm run build
 npm run lint
+npm run audit:dependencies
 npm test
 npm run test:int
 npm run test:e2e
@@ -185,6 +202,38 @@ Run `npm test` for the complete integration and browser test suite. The combined
 script uses npm throughout so it reuses the dependencies installed by `npm ci`.
 Using pnpm inside this script can trigger an automatic install and replace the
 npm dependency tree.
+
+The 2026-10-04 refresh updated 20 direct dependencies and compatible transitive
+packages. Verification passed strict peer/engine installation, `npm ls --all`,
+TypeScript, lint, stable generated types/import map, 34 unit/integration tests,
+six Chromium tests, production and Docker builds, and migration retry/rollback
+with existing users and sessions. An Alpine ARM64 container passed all three
+seed commands, demo rendering, login cookies, media upload/resizing/delivery,
+unsafe SVG rejection, invalid seed-password account preservation, and Docker
+health checks. Validation used disposable databases and containers.
+
+The only deferred direct updates are GraphQL `17.0.2`, ESLint `10.12.0`, and
+TypeScript `7.0.2`, which violate the peer constraints listed above. The four
+open Payload Dependabot proposals are covered by the coordinated update; their
+pull requests were not merged. Node 24/26 and the configured GitHub Action major
+versions were already current. No production database or external S3 service
+was changed.
+
+Vitest runs utility tests from `tests/unit` and integration tests from
+`tests/int`. Both suites use dedicated temporary SQLite databases. Playwright
+workers inherit one dedicated suite database through `TRUSTRED_E2E_DATABASE_URL`.
+Neither test runner reuses `DATABASE_URL` from `.env`. Tests include deterministic
+query-count checks for feed rendering instead of machine-dependent timing limits.
+Upload fixtures disable S3 so they cannot write to configured external storage.
+Server-side upload checks use Vitest's Node environment, matching Payload's
+native Buffer and Sharp runtime rather than jsdom's typed-array realm.
+
+`npm run audit:dependencies` fails for new high or critical advisories and for
+audit service errors. The exact unpatched `braces` build advisory is explicitly
+reported and reviewed; the legacy esbuild development-server advisory is also
+reported. Revisit both when upstream publishes compatible fixes. Do not apply
+`npm audit fix --force`, which currently proposes incompatible downgrades of
+the Payload stack.
 
 Run end-to-end tests when changing frontend routes, authentication, setup, or
 editorial workflows:

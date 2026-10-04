@@ -115,6 +115,7 @@ export const getSiteSettings = cache(async () => {
   const [settings, navigation] = await Promise.all([
     payload.findGlobal({
       slug: 'site-settings',
+      overrideAccess: false,
     }),
     getNavigationItems(payload),
   ])
@@ -138,10 +139,6 @@ export const getSiteSettings = cache(async () => {
     legal: {
       ...defaultSiteSettings.legal,
       ...settings.legal,
-    },
-    smtp: {
-      ...defaultSiteSettings.smtp,
-      ...settings.smtp,
     },
     theme: {
       ...defaultSiteSettings.theme,
@@ -214,7 +211,7 @@ export const getPageBySlug = cache(async (slug: string) => {
   return null
 })
 
-export async function getFeedItems(source: FeedSource, limit: number) {
+export const getFeedItems = cache(async (source: FeedSource, limit: number) => {
   const payload = await getPayloadClient()
   const result = await payload.find({
     collection: source,
@@ -237,7 +234,7 @@ export async function getFeedItems(source: FeedSource, limit: number) {
   })
 
   return result.docs
-}
+})
 
 export const getPublicOperations = cache(async () => {
   const payload = await getPayloadClient()

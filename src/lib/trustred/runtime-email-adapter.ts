@@ -2,6 +2,7 @@ import nodemailer, { type Transporter } from 'nodemailer'
 import type { EmailAdapter, Payload } from 'payload'
 
 import type { SiteSetting } from '@/payload-types'
+import { decryptSMTPPassword } from '@/lib/trustred/smtp-credentials'
 
 type RuntimeSMTPSettings = {
   fromAddress: string
@@ -51,7 +52,7 @@ function normalizeSMTPSettings(settings: SiteSetting): RuntimeSMTPSettings | nul
     fromName,
     host,
     ignoreTLS: Boolean(smtp.ignoreTLS),
-    password: String(smtp.password ?? '').trim() || undefined,
+    password: smtp.password ? decryptSMTPPassword(smtp.password) : undefined,
     port,
     requireTLS: Boolean(smtp.requireTLS),
     secure: Boolean(smtp.secure),

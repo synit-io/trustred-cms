@@ -32,4 +32,13 @@ test.describe('Admin Panel', () => {
     const editViewArtifact = page.locator('input[name="email"]')
     await expect(editViewArtifact).toBeVisible()
   })
+
+  test('keeps successful SMTP status redirects outside error handling', async () => {
+    await page.goto('http://localhost:3000/manage/settings')
+    await page.getByRole('button', { name: 'Verbindung testen' }).click()
+    await expect(page).toHaveURL(/smtpStatus=warning/)
+    await expect(
+      page.getByText('Es wurde keine Testmail versendet.', { exact: false }),
+    ).toBeVisible()
+  })
 })

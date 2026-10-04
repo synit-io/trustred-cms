@@ -63,21 +63,24 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
     const { payload, user } = await requireEditorialContext()
     await saveSiteSettings(payload, user, formData)
 
+    let status: string
+    let message: string
     try {
       const result = await sendSmtpTestEmail(
         payload,
         user,
         String(formData.get('smtp.testRecipient') ?? '').trim(),
       )
-      const status = result.skipped ? 'warning' : 'success'
-      const message = result.message ?? 'SMTP Test erfolgreich versendet'
-      redirect(
-        `/manage/settings?smtpStatus=${encodeURIComponent(status)}&smtpMessage=${encodeURIComponent(message)}`,
-      )
+      status = result.skipped ? 'warning' : 'success'
+      message = result.message
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'SMTP Test fehlgeschlagen'
-      redirect(`/manage/settings?smtpStatus=error&smtpMessage=${encodeURIComponent(message)}`)
+      payload.logger.error({ err: error }, 'SMTP test delivery failed')
+      status = 'error'
+      message = 'SMTP Test fehlgeschlagen. Bitte prüfe die Mail-Einstellungen.'
     }
+    redirect(
+      `/manage/settings?smtpStatus=${encodeURIComponent(status)}&smtpMessage=${encodeURIComponent(message)}`,
+    )
   }
 
   async function clearDemoDataAction() {

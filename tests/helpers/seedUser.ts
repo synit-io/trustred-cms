@@ -5,7 +5,7 @@ import type { User } from '../../src/payload-types'
 export const testUser = {
   displayName: 'Payload Dev',
   email: 'dev@payloadcms.com',
-  password: 'test',
+  password: 'test-password-123',
   roles: ['super-admin'] as NonNullable<User['roles']>,
 }
 

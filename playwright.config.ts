@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { mkdtempSync } from 'node:fs'
 
 /**
  * Read environment variables from file.
@@ -8,10 +9,15 @@ import { tmpdir } from 'node:os'
  */
 import 'dotenv/config'
 
-process.env.DATABASE_URL ??= `file:${join(tmpdir(), `trustred-playwright-${process.pid}.sqlite`)}`
-process.env.PAYLOAD_SECRET ??= 'trustred-playwright-secret'
-process.env.SETUP_TOKEN ??= 'trustred-playwright-setup-token'
-process.env.SITE_TIMEZONE ??= 'Europe/Berlin'
+// Worker processes inherit the suite's dedicated database, never the .env database.
+process.env.TRUSTRED_E2E_DATABASE_URL ??= `file:${join(mkdtempSync(join(tmpdir(), 'trustred-playwright-')), 'test.sqlite')}`
+process.env.DATABASE_URL = process.env.TRUSTRED_E2E_DATABASE_URL
+process.env.PAYLOAD_SECRET = 'trustred-playwright-secret'
+process.env.SETUP_TOKEN = 'trustred-playwright-setup-token'
+process.env.SITE_TIMEZONE = 'Europe/Berlin'
+for (const key of ['S3_BUCKET', 'S3_REGION', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY']) {
+  process.env[key] = ''
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.

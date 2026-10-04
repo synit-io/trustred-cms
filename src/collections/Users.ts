@@ -34,6 +34,14 @@ export const Users: CollectionConfig = {
   },
   auth: true,
   hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (typeof data?.password === 'string' && data.password.length < 12) {
+          throw new APIError('New passwords must contain at least 12 characters.', 400)
+        }
+        return data
+      },
+    ],
     beforeChange: [
       ({ data, originalDoc, req }) => {
         const actor = req.user as User | null | undefined

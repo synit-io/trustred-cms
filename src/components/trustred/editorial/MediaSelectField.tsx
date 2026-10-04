@@ -96,7 +96,7 @@ export function MediaSelectField(props: Props) {
             {selected.url ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt={selected.alt} className="h-24 w-24 rounded-2xl object-cover" src={selected.url} />
+                <img loading="lazy" decoding="async" alt={selected.alt} className="h-24 w-24 rounded-2xl object-cover" src={selected.url} />
               </>
             ) : null}
             <div className="grid gap-1 text-sm text-neutral-700">

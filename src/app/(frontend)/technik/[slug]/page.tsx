@@ -1,3 +1,4 @@
+import { createPublicMetadata } from '@/lib/trustred/metadata'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -10,6 +11,12 @@ type Props = {
   params: Promise<{
     slug: string
   }>
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params
+  const [doc, settings] = await Promise.all([getPublicEquipmentBySlug(slug), getSiteSettings()])
+  return createPublicMetadata(doc, settings.siteName)
 }
 
 export default async function EquipmentDetailPage({ params }: Props) {

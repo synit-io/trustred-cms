@@ -83,8 +83,8 @@ chmod 600 .env
 ```
 
 Keep `PAYLOAD_SECRET` stable. Replacing it invalidates existing sessions and may
-break data protected with that secret. Never use the repository's development
-fallback in production. `SETUP_TOKEN` is required to create the first
+break data protected with that secret. The application requires `PAYLOAD_SECRET`
+in every environment. `SETUP_TOKEN` is required to create the first
 super-admin. Rotate it after setup and keep the replacement private.
 
 ## 3. Create the Compose file
@@ -98,6 +98,7 @@ services:
   app:
     image: synitio/trustred-cms:latest
     restart: unless-stopped
+    stop_grace_period: 30s
     env_file:
       - .env
     environment:
@@ -136,6 +137,18 @@ The entrypoint runs pending migrations before starting Next.js. Leave
 `TRUSTRED_RUN_MIGRATIONS=true` during normal operation. Disable it only for a
 specific recovery procedure.
 
+The update to Payload `3.90.2` adds the nullable
+`users.reset_password_requested_at` column for password-reset throttling. The
+committed migration accepts databases already updated by development schema
+push and preserves existing users, password hashes, and sessions. Run migrations
+before starting the updated server. Rollback removes this throttling timestamp;
+the ordinary password-reset token and expiry fields remain unchanged.
+
+Payload now rejects unsafe SVG/XML uploads more strictly. Existing media files
+are not rewritten. New valid JPEG uploads and all configured image sizes are
+covered by regression checks; external S3 connectivity requires verification
+with the installation's storage service.
+
 ## 5. Configure HTTPS
 
 Point the domain's DNS record at the server. Forward HTTPS traffic to
@@ -163,7 +176,15 @@ location / {
 ```
 
 Configure a suitable request-body limit in the proxy when editors upload large
-media files.
+media files. TrustRed's file limit is 10 MiB; allow multipart overhead in the
+proxy limit. Overwrite `X-Forwarded-Host`, `X-Forwarded-Proto`, and client-address
+headers at the trusted proxy boundary.
+
+For Nginx installations, optional per-address API throttling can be configured
+in the `http` block with `limit_req_zone $binary_remote_addr zone=trustred:10m
+rate=10r/s;` and applied to an API location with `limit_req zone=trustred
+burst=20 nodelay;`. Tune the limit for the installation, keep health probes out
+of the limited location, and return `429` with `limit_req_status 429;`.
 
 ## 6. Complete first-run setup
 
@@ -191,6 +212,13 @@ Both paths are mounted from the deployment directory. Back up `data`, `media`,
 `.env`, and `docker-compose.yml` together. SMTP configuration stored through the
 management UI resides in the database and is therefore included in the database
 backup.
+
+SMTP passwords are stored with AES-256-GCM using a key derived from the stable
+`PAYLOAD_SECRET`. Startup migrations encrypt existing plaintext values;
+unchanged saved passwords remain valid. Back up the original secret with the
+database. To rotate that secret, re-enter the SMTP password under the new key.
+Older backups may still contain plaintext credentials and need appropriate
+access controls. Encryption does not replace host and backup permissions.
 
 ### Optional S3-compatible media storage
 
@@ -243,9 +271,46 @@ migrations before serving traffic. Review release notes before updating and use 
 fixed image tag instead of `latest` when versioned tags are available and strict
 change control is required.
 
+## Rollback
+
+Record the running image's digest before each update, and keep a pre-update
+backup of the database, media, `.env`, and Compose file. If an update fails,
+stop the application, restore that complete backup, set the image to the
+recorded digest, restore UID/GID `1001` ownership, and start the application.
+Check `/ready` and test login and a public page before reopening traffic.
+
+Restoring an older image alone does not reverse data migrations. In particular,
+older versions do not understand encrypted SMTP passwords. Restore the matching
+pre-update database and application secret together. A full backup rollback
+loses writes made after the backup; plan a maintenance window accordingly.
+
+## Health and logs
+
+The image checks `/ready` every 30 seconds after a 40-second startup allowance.
+`/health` checks the HTTP process; `/ready` also verifies database access and
+returns `503` when unavailable. The entrypoint uses `exec` so Next.js receives
+shutdown signals; Compose allows 30 seconds for shutdown.
+
+Payload writes operational logs to the container output. Mutation events use
+`event: audit` with actor/document IDs and operation names, without document
+bodies, passwords, or submitted form contents. These are hook events, not a
+tamper-proof audit store; a later transaction rollback can still invalidate a
+logged mutation. Configure log rotation and retention on the Docker host, and
+monitor readiness and container health through the installation's existing
+monitoring service. Automatic restart of unhealthy containers and off-host
+alert delivery require an external supervisor.
+
 ## Seeding and maintenance commands
 
 Run bundled maintenance scripts inside the container:
+
+Seeding inherits the image's production environment and uses the schema managed
+by startup migrations. It must not force a development schema push into an
+existing migrated database.
+Standalone seed commands close Payload's database connections before an explicit
+success/failure exit. This avoids the observed exit 139 during implicit shutdown
+on Alpine ARM64, which also occurred with the original dependency versions.
+User seeding validates the password before deleting a matching account.
 
 ```bash
 docker compose exec app npm run seed:empty

@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { hasRole, trustredRoles, userHasRole } from '@/access/hasRole'
+import { encryptSMTPPassword } from '@/lib/trustred/smtp-credentials'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -185,6 +186,15 @@ export const SiteSettings: GlobalConfig = {
         {
           name: 'password',
           type: 'text',
+          admin: {
+            description:
+              'SMTP passwords are encrypted at rest. A saved value can be left unchanged.',
+          },
+          hooks: {
+            beforeChange: [
+              ({ value }) => (typeof value === 'string' ? encryptSMTPPassword(value) : value),
+            ],
+          },
         },
         {
           name: 'fromName',

@@ -567,7 +567,9 @@ export async function PageRenderer({
           feedBlock.source === 'events' && pathname === '/termine/archiv'
         const usesSpecialRoutePresentation =
           routeIsTeamDirectory || routeIsUpcomingEvents || routeIsArchivedEvents
-        const items = await getFeedItems(feedBlock.source, feedBlock.limit)
+        const items = usesSpecialRoutePresentation
+          ? []
+          : await getFeedItems(feedBlock.source, feedBlock.limit)
         const directoryCrew = routeIsTeamDirectory ? await getPublicCrew() : null
         const routeEvents =
           routeIsUpcomingEvents || routeIsArchivedEvents ? await getPublicEvents() : null

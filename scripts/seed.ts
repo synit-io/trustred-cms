@@ -978,4 +978,16 @@ const isDirectExecution =
 
 if (isDirectExecution) {
   void seedContent({ emptyMode: new Set(process.argv.slice(2)).has('--empty') })
+    .finally(async () => {
+      const payload = await getPayload({ config })
+      await payload.destroy()
+    })
+    // Avoid the observed implicit-shutdown crash on Alpine ARM64 after Payload closes.
+    .then(
+      () => process.exit(0),
+      (error: unknown) => {
+        console.error(error)
+        process.exit(1)
+      },
+    )
 }

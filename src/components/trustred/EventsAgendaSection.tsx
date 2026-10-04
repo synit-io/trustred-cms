@@ -153,7 +153,7 @@ export function EventsAgendaSection({
           <div className="grid gap-4">
             {leadImage?.src ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <img loading="lazy" decoding="async"
                 alt={leadImage.alt}
                 className="h-56 w-full rounded-2xl object-cover"
                 src={leadImage.src}

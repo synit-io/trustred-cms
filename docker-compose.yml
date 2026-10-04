@@ -18,6 +18,7 @@ services:
       - trustred-data:/app/data
       - trustred-media:/app/media
     restart: unless-stopped
+    stop_grace_period: 30s
 
 volumes:
   trustred-data:

@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "migrate": "NODE_OPTIONS=--no-deprecation node ./scripts/run-migrations.js",
-    "seed": "NODE_ENV=development NODE_OPTIONS=--no-deprecation node ./scripts/seed.js",
-    "seed:empty": "NODE_ENV=development NODE_OPTIONS=--no-deprecation node ./scripts/seed.js --empty",
-    "seed:user": "NODE_ENV=development NODE_OPTIONS=--no-deprecation node ./scripts/seed-user.js",
+    "seed": "NODE_OPTIONS=--no-deprecation node ./scripts/seed.js",
+    "seed:empty": "NODE_OPTIONS=--no-deprecation node ./scripts/seed.js --empty",
+    "seed:user": "NODE_OPTIONS=--no-deprecation node ./scripts/seed-user.js",
     "start": "node server.js"
   }
 }

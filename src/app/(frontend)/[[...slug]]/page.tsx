@@ -1,3 +1,4 @@
+import { createPublicMetadata } from '@/lib/trustred/metadata'
 import { notFound, redirect } from 'next/navigation'
 
 import { PageRenderer } from '@/components/trustred/PageRenderer'
@@ -13,6 +14,15 @@ type Props = {
   searchParams: Promise<{
     submittedForm?: string | string[]
   }>
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params
+  const [doc, settings] = await Promise.all([
+    getPageBySlug(slug?.join('/') || 'home'),
+    getSiteSettings(),
+  ])
+  return createPublicMetadata(doc, settings.siteName)
 }
 
 export default async function TrustredPage({ params, searchParams }: Props) {

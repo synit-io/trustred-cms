@@ -7,6 +7,7 @@ import type { Payload } from 'payload'
 import { getPayloadClient } from '@/lib/trustred/cms'
 import { createLexicalTextContent, readLexicalText } from '@/lib/trustred/lexical'
 import type { Form } from '@/payload-types'
+import { getPayloadSecret } from '@/lib/trustred/environment'
 
 type PublicFormKey = 'contact' | 'join'
 
@@ -343,7 +344,7 @@ async function getRequestFingerprint() {
   const forwardedFor = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim()
   const clientAddress = forwardedFor || requestHeaders.get('x-real-ip') || 'unknown'
   const userAgent = requestHeaders.get('user-agent') || 'unknown'
-  const secret = process.env.PAYLOAD_SECRET || 'trustred-local-dev-secret'
+  const secret = getPayloadSecret()
 
   return createHmac('sha256', secret).update(`${clientAddress}\n${userAgent}`).digest('hex')
 }

@@ -16,26 +16,31 @@ export function LoginForm() {
     setError(null)
 
     const formData = new FormData(event.currentTarget)
-    const response = await fetch('/manage/auth/login', {
-      body: JSON.stringify({
-        email: formData.get('email'),
-        password: formData.get('password'),
-      }),
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-    })
+    try {
+      const response = await fetch('/manage/auth/login', {
+        body: JSON.stringify({
+          email: formData.get('email'),
+          password: formData.get('password'),
+        }),
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      })
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setError('Login fehlgeschlagen. Bitte Zugangsdaten prüfen.')
+        return
+      }
+
+      const result = (await response.json()) as LoginResponse
+      window.location.assign(result.redirectTo ?? '/manage')
+    } catch {
+      setError('Anmeldung derzeit nicht möglich. Bitte versuche es erneut.')
+    } finally {
       setLoading(false)
-      setError('Login fehlgeschlagen. Bitte Zugangsdaten prüfen.')
-      return
     }
-
-    const result = (await response.json()) as LoginResponse
-    window.location.assign(result.redirectTo ?? '/manage')
   }
 
   return (

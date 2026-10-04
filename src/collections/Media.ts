@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 
 import { hasRole, trustredRoles } from '@/access/hasRole'
 
@@ -12,6 +12,20 @@ export const Media: CollectionConfig = {
     delete: hasRole(trustredRoles.media),
     read: () => true,
     update: hasRole(trustredRoles.media),
+  },
+  hooks: {
+    beforeOperation: [
+      ({ args, operation, req }) => {
+        if (
+          (operation === 'create' || operation === 'update') &&
+          req.file &&
+          Math.max(req.file.size, req.file.data?.length ?? 0) > 10 * 1024 * 1024
+        ) {
+          throw new APIError('Media uploads must not exceed 10 MiB.', 413)
+        }
+        return args
+      },
+    ],
   },
   fields: [
     {

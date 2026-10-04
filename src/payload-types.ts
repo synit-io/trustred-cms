@@ -159,6 +159,7 @@ export interface User {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -925,6 +926,7 @@ export interface UsersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
+  resetPasswordRequestedAt?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -1625,6 +1627,9 @@ export interface SiteSetting {
     port?: number | null;
     secure?: boolean | null;
     username?: string | null;
+    /**
+     * SMTP passwords are encrypted at rest. A saved value can be left unchanged.
+     */
     password?: string | null;
     fromName?: string | null;
     fromEmail?: string | null;

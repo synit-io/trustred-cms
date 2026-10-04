@@ -5,6 +5,7 @@
   "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "scripts": {
+    "audit:dependencies": "node ./scripts/audit-dependencies.mjs",
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
     "docker:build": "docker build -t trustred-cms:latest .",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
@@ -24,24 +25,24 @@
     "verify:starter": "cross-env NODE_OPTIONS=--no-deprecation node --import=tsx/esm ./scripts/verify-starter-content.ts"
   },
   "dependencies": {
-    "@payloadcms/db-sqlite": "3.89.0",
-    "@payloadcms/next": "3.89.0",
-    "@payloadcms/plugin-form-builder": "3.89.0",
-    "@payloadcms/plugin-nested-docs": "3.89.0",
-    "@payloadcms/plugin-seo": "3.89.0",
-    "@payloadcms/richtext-lexical": "3.89.0",
-    "@payloadcms/storage-s3": "3.89.0",
-    "@payloadcms/ui": "3.89.0",
+    "@payloadcms/db-sqlite": "3.90.2",
+    "@payloadcms/next": "3.90.2",
+    "@payloadcms/plugin-form-builder": "3.90.2",
+    "@payloadcms/plugin-nested-docs": "3.90.2",
+    "@payloadcms/plugin-seo": "3.90.2",
+    "@payloadcms/richtext-lexical": "3.90.2",
+    "@payloadcms/storage-s3": "3.90.2",
+    "@payloadcms/ui": "3.90.2",
     "cross-env": "^10.1.0",
-    "dotenv": "17.4.2",
+    "dotenv": "18.0.5",
     "graphql": "^16.14.2",
-    "next": "16.3.5",
-    "nodemailer": "^10.0.10",
-    "payload": "3.89.0",
+    "next": "16.3.8",
+    "nodemailer": "^10.0.14",
+    "payload": "3.90.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "sanitize-html": "^2.17.7",
-    "sharp": "0.35.4",
+    "sanitize-html": "^2.18.0",
+    "sharp": "0.35.5",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
@@ -49,24 +50,24 @@
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/react": "16.3.3",
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.4",
     "@types/nodemailer": "^8.0.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@types/sanitize-html": "^2.16.1",
+    "@types/sanitize-html": "^2.16.2",
     "@vitejs/plugin-react": "6.1.1",
     "eslint": "^9.39.5",
-    "eslint-config-next": "16.3.5",
-    "jsdom": "30.1.0",
-    "pnpm": "^12.5.1",
-    "prettier": "^3.9.8",
-    "tsx": "4.23.13",
+    "eslint-config-next": "16.3.8",
+    "jsdom": "30.1.2",
+    "pnpm": "^12.9.1",
+    "prettier": "^3.9.9",
+    "tsx": "4.23.15",
     "typescript": "~6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   },
   "engines": {
-    "node": "^22.13.0 || ^24.0.0 || >=26.0.0",
-    "pnpm": "^9 || ^10 || ^11"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0",
+    "pnpm": "^9 || ^10 || ^11 || ^12"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -83,6 +84,12 @@
     "unrs-resolver@1.12.2": true
   },
   "overrides": {
-    "dompurify": "3.4.14"
+    "dompurify": "3.4.16",
+    "brace-expansion@1": "1.1.21",
+    "brace-expansion@5": "5.0.12",
+    "fast-uri": "3.1.8",
+    "payload": {
+      "undici": "7.30.0"
+    }
   }
 }

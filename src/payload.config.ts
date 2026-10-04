@@ -23,6 +23,9 @@ import { Posts } from './collections/Posts'
 import { SiteSettings } from './globals/SiteSettings'
 import { SetupState } from './globals/SetupState'
 import { runtimeSMTPAdapter } from './lib/trustred/runtime-email-adapter'
+import { getPayloadSecret, validateStorageEnvironment } from './lib/trustred/environment'
+import { getSiteTimeZone } from './lib/trustred/time'
+import { auditLogging } from './lib/trustred/audit-logging'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -65,12 +68,10 @@ function getStoragePlugin() {
   })
 }
 
+const configuredPayloadSecret = getPayloadSecret()
+validateStorageEnvironment()
+getSiteTimeZone()
 const storagePlugin = getStoragePlugin()
-const configuredPayloadSecret = process.env.PAYLOAD_SECRET?.trim()
-
-if (!configuredPayloadSecret && process.env.NODE_ENV === 'production') {
-  throw new Error('PAYLOAD_SECRET is required in production.')
-}
 
 export default buildConfig({
   admin: {
@@ -93,7 +94,8 @@ export default buildConfig({
   ],
   editor: lexicalEditor(),
   globals: [SiteSettings, SetupState],
-  secret: configuredPayloadSecret || 'trustred-local-dev-secret',
+  secret: configuredPayloadSecret,
+  upload: { abortOnLimit: true, limits: { fileSize: 10 * 1024 * 1024 } },
   email: runtimeSMTPAdapter,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
@@ -164,5 +166,6 @@ export default buildConfig({
         ],
       },
     }),
+    auditLogging,
   ],
 })

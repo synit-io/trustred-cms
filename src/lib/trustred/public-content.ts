@@ -68,7 +68,7 @@ const monthYearFormat = new Intl.DateTimeFormat('de-DE', {
 })
 
 export function formatDate(value?: string | null) {
-  if (!value) {
+  if (!value || Number.isNaN(new Date(value).getTime())) {
     return 'Kein Datum'
   }
 
@@ -76,7 +76,7 @@ export function formatDate(value?: string | null) {
 }
 
 export function formatDateTime(value?: string | null) {
-  if (!value) {
+  if (!value || Number.isNaN(new Date(value).getTime())) {
     return 'Kein Zeitpunkt'
   }
 
@@ -114,7 +114,7 @@ export function formatDateTimeRange(start?: string | null, end?: string | null) 
 }
 
 export function formatMonthYear(value?: string | null) {
-  if (!value) {
+  if (!value || Number.isNaN(new Date(value).getTime())) {
     return 'Ohne Zeitraum'
   }
 
