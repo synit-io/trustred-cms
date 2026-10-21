@@ -235,6 +235,12 @@ reported. Revisit both when upstream publishes compatible fixes. Do not apply
 `npm audit fix --force`, which currently proposes incompatible downgrades of
 the Payload stack.
 
+The 2026-10-21 audit fix refreshes the locked Vite dependency to `8.3.5`, a
+patched release for `GHSA-587h-7wmj-h5pm`. The SEO plugin stays on `3.90.2` with the
+Payload stack: updating it alone to `3.91.0` breaks its exact Payload peer
+requirement and prevents dependency resolution. Keep the audit's high/critical
+failure policy intact when refreshing vulnerable transitive dependencies.
+
 Run end-to-end tests when changing frontend routes, authentication, setup, or
 editorial workflows:
 
