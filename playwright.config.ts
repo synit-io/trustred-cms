@@ -15,6 +15,7 @@ process.env.DATABASE_URL = process.env.TRUSTRED_E2E_DATABASE_URL
 process.env.PAYLOAD_SECRET = 'trustred-playwright-secret'
 process.env.SETUP_TOKEN = 'trustred-playwright-setup-token'
 process.env.SITE_TIMEZONE = 'Europe/Berlin'
+process.env.TRUSTRED_PUBLIC_ORIGIN = 'http://localhost:3000'
 for (const key of ['S3_BUCKET', 'S3_REGION', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY']) {
   process.env[key] = ''
 }

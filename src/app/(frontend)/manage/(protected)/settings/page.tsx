@@ -475,8 +475,9 @@ export default async function ManageSettingsPage({ searchParams }: Props) {
           <p className="ff-kicker">Demo Daten</p>
           <h3 className="text-2xl">Demo Daten löschen</h3>
           <p className="text-sm text-neutral-700">
-            Entfernt bekannte Demo-Inhalte, Demo-Medien und Demo-Seiten aus dem Seed und stellt
-            eine saubere Basisstruktur mit Navigation, Formularen und Warn-Presets her.
+            Entfernt bekannte Demo-Einträge und ungenutzte Demo-Medien. Bestehende Seiten und
+            Organisations- und Kontakteinstellungen bleiben erhalten. Fehlende Basisseiten,
+            Formulare und Warn-Presets werden ergänzt.
           </p>
         </div>
         <button

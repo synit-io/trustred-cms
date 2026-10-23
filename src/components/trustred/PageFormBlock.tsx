@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { PublicForm } from '@/components/trustred/PublicForm'
 import { getRenderablePublicForm, submitConfiguredForm } from '@/lib/trustred/public-forms'
 import type { PublicFormReference } from '@/lib/trustred/public-forms'
+import { safeFormRedirectPath } from '@/lib/trustred/form-redirect'
 import { toRelationId } from '@/lib/trustred/page-builder'
 
 type Props = {
@@ -68,7 +69,11 @@ export async function PageFormBlock({ block, index, pathname, submittedForm }: P
   async function submitAction(formData: FormData) {
     'use server'
 
-    await submitConfiguredForm(resolvedFormReference, formData)
+    const submittedForm = await submitConfiguredForm(resolvedFormReference, formData)
+    if (submittedForm.confirmationType === 'redirect') {
+      const destination = safeFormRedirectPath(submittedForm.redirect?.url)
+      if (destination) redirect(destination)
+    }
     redirect(`${pathname}?submittedForm=${encodeURIComponent(successToken)}`)
   }
 

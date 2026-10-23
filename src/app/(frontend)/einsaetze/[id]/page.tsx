@@ -50,7 +50,7 @@ export default async function OperationDetailPage({ params }: Props) {
   }
   const operationDateLabel = formatDate(operation.startedAt)
   const operationTimeLabel = timeFormat.format(new Date(operation.startedAt))
-  const operationImage = getMediaImage(operation.featuredImage)
+  const operationImage = getMediaImage(operation.featuredImage, 'feature')
   const unitsInvolved = (operation.unitsInvolved ?? [])
     .map((entry) => entry?.unit?.trim())
     .filter((entry): entry is string => Boolean(entry))

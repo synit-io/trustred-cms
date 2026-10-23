@@ -4,19 +4,17 @@ import { OperationTypeBadge } from '@/components/trustred/OperationTypeBadge'
 import { getOperationDetailPath } from '@/lib/trustred/operations'
 import { getOperationMeta } from '@/lib/trustred/operations'
 import { getStatusBadgeClass } from '@/lib/trustred/public-content'
-import { getSiteTimeZone } from '@/lib/trustred/time'
 import type { Operation } from '@/payload-types'
 
-const dateTimeFormat = new Intl.DateTimeFormat('de-DE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  timeZone: getSiteTimeZone(),
-})
-
-export function OperationsTable({ operations }: { operations: Operation[] }) {
+export function OperationsTable({ operations, timeZone }: { operations: Operation[]; timeZone: string }) {
+  const dateTimeFormat = new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone,
+  })
   return (
     <div className="grid gap-3">
       <div className="grid gap-3 md:hidden">

@@ -14,6 +14,7 @@ import {
 import type { Event } from '@/payload-types'
 
 type Props = {
+  archivePagination?: { page: number; totalPages: number }
   eyebrow?: string | null
   events: Event[]
   headline: string
@@ -23,6 +24,7 @@ type Props = {
 }
 
 export function EventsAgendaSection({
+  archivePagination,
   currentTimestamp,
   eyebrow,
   events,
@@ -118,6 +120,18 @@ export function EventsAgendaSection({
           </article>
         )}
 
+        {archivePagination && archivePagination.totalPages > 1 ? (
+          <nav aria-label="Terminarchiv-Seiten" className="flex items-center justify-between gap-3">
+            {archivePagination.page > 1 ? (
+              <Link className="ff-btn-ghost" href={`/termine/archiv?page=${archivePagination.page - 1}`}>Neuere Termine</Link>
+            ) : <span />}
+            <span>Seite {archivePagination.page} von {archivePagination.totalPages}</span>
+            {archivePagination.page < archivePagination.totalPages ? (
+              <Link className="ff-btn-ghost" href={`/termine/archiv?page=${archivePagination.page + 1}`}>Ältere Termine</Link>
+            ) : <span />}
+          </nav>
+        ) : null}
+
         <div className="flex flex-wrap gap-3">
           <Link className="ff-btn-accent" href="/termine">
             Zu den kommenden Terminen
@@ -131,7 +145,7 @@ export function EventsAgendaSection({
   }
 
   const [nextEvent, ...remainingEvents] = filteredEvents
-  const leadImage = nextEvent ? getMediaImage(nextEvent.featuredImage) : null
+  const leadImage = nextEvent ? getMediaImage(nextEvent.featuredImage, 'feature') : null
   const groupedEvents = remainingEvents.reduce<Map<string, Event[]>>((groups, event) => {
     const key = formatMonthYear(event.startsAt)
     const existing = groups.get(key) ?? []

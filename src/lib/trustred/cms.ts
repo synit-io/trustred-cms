@@ -67,20 +67,25 @@ function sameNormalizedSlug(left?: string | null, right?: string | null) {
 async function getNavigationItems(payload: Awaited<ReturnType<typeof getPayloadClient>>) {
   const result = await payload.find({
     collection: 'pages',
-    depth: pageDepth,
+    depth: 0,
     limit: 200,
+    select: {
+      breadcrumbs: true,
+      navigationLabel: true,
+      navigationOrder: true,
+      showInNavigation: true,
+      slug: true,
+      title: true,
+    },
     sort: 'navigationOrder',
     where: {
-      or: [
+      and: [
+        { showInNavigation: { not_equals: false } },
         {
-          _status: {
-            equals: 'published',
-          },
-        },
-        {
-          _status: {
-            exists: false,
-          },
+          or: [
+            { _status: { equals: 'published' } },
+            { _status: { exists: false } },
+          ],
         },
       ],
     },
@@ -289,16 +294,68 @@ export const getPublicPosts = cache(async () => {
 
 export const getPublicEvents = cache(async (): Promise<PayloadEvent[]> => {
   const payload = await getPayloadClient()
+  const now = new Date().toISOString()
+  const availability: Where = {
+    or: [
+      { endsAt: { greater_than_equal: now } },
+      { and: [{ endsAt: { exists: false } }, { startsAt: { greater_than_equal: now } }] },
+    ],
+  }
+  const [upcoming, archived] = await Promise.all([
+    payload.find({
+      collection: 'events',
+      limit: 100,
+      sort: 'startsAt',
+      where: { and: [{ visibility: { equals: 'public' } }, availability] },
+    }),
+    payload.find({
+      collection: 'events',
+      limit: 100,
+      sort: '-startsAt',
+      where: {
+        and: [
+          { visibility: { equals: 'public' } },
+          {
+            or: [
+              { endsAt: { less_than: now } },
+              { and: [{ endsAt: { exists: false } }, { startsAt: { less_than: now } }] },
+            ],
+          },
+        ],
+      },
+    }),
+  ])
+
+  return [...upcoming.docs, ...archived.docs].map((item) => withResolvedEventSlug(item as PayloadEvent))
+})
+
+export const getPublicArchivedEvents = cache(async (page = 1) => {
+  const payload = await getPayloadClient()
+  const now = new Date().toISOString()
+  const requestedPage = Math.max(1, page)
   const result = await payload.find({
     collection: 'events',
-    limit: 100,
-    sort: 'startsAt',
+    limit: 25,
+    page: requestedPage,
+    sort: '-startsAt',
     where: {
-      visibility: { equals: 'public' },
+      and: [
+        { visibility: { equals: 'public' } },
+        {
+          or: [
+            { endsAt: { less_than: now } },
+            { and: [{ endsAt: { exists: false } }, { startsAt: { less_than: now } }] },
+          ],
+        },
+      ],
     },
   })
 
-  return (result.docs as PayloadEvent[]).map((item) => withResolvedEventSlug(item))
+  return {
+    docs: result.docs.map((item) => withResolvedEventSlug(item as PayloadEvent)),
+    page: result.page ?? requestedPage,
+    totalPages: result.totalPages,
+  }
 })
 
 export const getPublicPostBySlug = cache(async (slug: string) => {

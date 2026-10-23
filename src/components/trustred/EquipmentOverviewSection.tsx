@@ -81,14 +81,14 @@ export function EquipmentOverviewSection({
               </Link>
             </div>
           </div>
-          {getMediaImage(featuredItem.heroImage)?.src ? (
+          {getMediaImage(featuredItem.heroImage, 'feature')?.src ? (
             <div className="overflow-hidden rounded-2xl border border-neutral-200">
               <Image
-                alt={getMediaImage(featuredItem.heroImage)?.alt ?? ''}
+                alt={getMediaImage(featuredItem.heroImage, 'feature')?.alt ?? ''}
                 className="h-80 w-full object-cover"
-                height={getMediaImage(featuredItem.heroImage)?.height ?? 960}
-                src={getMediaImage(featuredItem.heroImage)?.src ?? ''}
-                width={getMediaImage(featuredItem.heroImage)?.width ?? 1440}
+                height={getMediaImage(featuredItem.heroImage, 'feature')?.height ?? 960}
+                src={getMediaImage(featuredItem.heroImage, 'feature')?.src ?? ''}
+                width={getMediaImage(featuredItem.heroImage, 'feature')?.width ?? 1440}
               />
             </div>
           ) : (
@@ -101,14 +101,14 @@ export function EquipmentOverviewSection({
         <div className="grid gap-4 lg:grid-cols-2">
           {overviewItems.map((item) => (
             <article className="ff-card grid gap-4" key={item.id}>
-              {getMediaImage(item.heroImage)?.src ? (
+              {getMediaImage(item.heroImage, 'card')?.src ? (
                 <div className="overflow-hidden rounded-xl border border-neutral-200">
                   <Image
-                    alt={getMediaImage(item.heroImage)?.alt ?? ''}
+                    alt={getMediaImage(item.heroImage, 'card')?.alt ?? ''}
                     className="h-64 w-full object-cover"
-                    height={getMediaImage(item.heroImage)?.height ?? 960}
-                    src={getMediaImage(item.heroImage)?.src ?? ''}
-                    width={getMediaImage(item.heroImage)?.width ?? 1440}
+                    height={getMediaImage(item.heroImage, 'card')?.height ?? 420}
+                    src={getMediaImage(item.heroImage, 'card')?.src ?? ''}
+                    width={getMediaImage(item.heroImage, 'card')?.width ?? 640}
                   />
                 </div>
               ) : (

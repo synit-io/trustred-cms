@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { getPayload } from 'payload'
+import { createLocalReq, getPayload } from 'payload'
 
 import config from '../src/payload.config'
 
@@ -22,6 +22,7 @@ async function main() {
       },
     })
 
+    const req = await createLocalReq({ context: { trustedUserProvisioning: true } }, payload)
     await payload.create({
       collection: 'users',
       data: {
@@ -30,6 +31,7 @@ async function main() {
         password,
         roles: ['super-admin'],
       },
+      req,
     })
 
     console.log(`Seeded editorial user: ${email}`)

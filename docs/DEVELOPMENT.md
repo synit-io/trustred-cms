@@ -12,7 +12,7 @@ rules for contributors.
 Use the project Node installation before running Node-based commands:
 
 ```bash
-export PATH="$HOME/.nvm/versions/node/v24.21.0/bin:$PATH"
+export PATH="$HOME/.nvm/versions/node/v24.22.1/bin:$PATH"
 ```
 
 ## Install dependencies
@@ -22,7 +22,7 @@ npm ci
 ```
 
 Keep `payload` and all direct `@payloadcms/*` dependencies on the same stable
-release, currently `3.90.2`. Next.js `16.3.8` and React `19.3.0` satisfy this
+release, currently `3.90.2`. Next.js `16.4.2` and React `19.3.0` satisfy this
 release's peer requirements. The remaining compatibility constraints are:
 
 - GraphQL stays on `16.x`, as required by Payload.
@@ -31,9 +31,9 @@ release's peer requirements. The remaining compatibility constraints are:
 - TypeScript stays on `6.0.x` because TypeScript-ESLint requires `<6.1.0`.
 - npm is the package manager used by the lockfile and CI.
 - jsdom `30.1.2` requires Node `^22.22.2 || ^24.15.0 || >=26`; `.nvmrc` selects
-  the installed Node `24.21.0` release.
+  Node `24.22.1`, which includes the [October 2026 security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
 - Node type definitions currently use `26.x`; avoid using runtime APIs absent
-  from supported Node 22/24 installations. Docker uses Node `26.10.0`.
+  from supported Node 22/24 installations. Docker uses Node `24.22.1`.
 - The optional pnpm dependency uses `12.x`; npm remains the installation and CI
   workflow. The package engine accepts pnpm 9 through 12.
 
@@ -82,6 +82,7 @@ Minimum development configuration:
 DATABASE_URL=file:./data/trustred-cms.db
 PAYLOAD_SECRET=replace-with-a-local-secret
 SETUP_TOKEN=replace-with-a-local-setup-token
+TRUSTRED_PUBLIC_ORIGIN=http://localhost:3000
 SITE_TIMEZONE=Europe/Berlin
 ```
 
@@ -127,6 +128,11 @@ warning presets, media, and bundled demo images.
 
 Demo content is intentionally separate from database migrations. Migrations must
 not silently introduce customer-facing demo content.
+
+The editorial **Demo Daten löschen** action removes known demo records and
+unreferenced demo media. It preserves all existing pages and site settings,
+including edits to seeded pages and organization/contact details. Missing base
+pages and forms are restored; use an explicit edit to reset existing content.
 
 Run `npm run migrate` before either seed command on a new or upgraded database.
 The source runner uses `src/migrations/index.ts`; the Docker image runs the same

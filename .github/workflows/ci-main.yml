@@ -25,6 +25,7 @@ jobs:
       PAYLOAD_SECRET: ci-only-payload-secret
       SETUP_TOKEN: ci-only-setup-token
       SITE_TIMEZONE: Europe/Berlin
+      TRUSTRED_PUBLIC_ORIGIN: http://localhost:3000
 
     steps:
       - name: Checkout
@@ -106,7 +107,7 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push image

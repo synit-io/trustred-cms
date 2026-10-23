@@ -59,7 +59,7 @@ export function TeamDirectorySection({ crew, eyebrow, headline, intro }: Props) 
 
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {members.map((member) => {
-                const portrait = getMediaImage(member.portrait)
+                const portrait = getMediaImage(member.portrait, 'square')
 
                 return (
                   <article className="ff-card grid h-full content-start gap-4" key={member.id}>

@@ -1,14 +1,17 @@
 // @vitest-environment node
 import { sql, type MigrateUpArgs } from '@payloadcms/db-sqlite'
-import { createLocalReq, getPayload, type Payload } from 'payload'
+import { createLocalReq, getPayload, handleEndpoints, type Payload } from 'payload'
 import sharp from 'sharp'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import config from '@/payload.config'
-import { getPageBySlug, getPublicFaqs } from '@/lib/trustred/cms'
-import { saveCollectionDoc } from '@/lib/trustred/editorial'
+import { POST as editorialLogout } from '@/app/(frontend)/manage/auth/logout/route'
+import { getPageBySlug, getPublicArchivedEvents, getPublicEvents, getPublicFaqs, getSiteSettings } from '@/lib/trustred/cms'
+import { clearDemoData, loadCollectionDocById, saveCollectionDoc, saveWarningSettings } from '@/lib/trustred/editorial'
 import { sanitizeHtmlFragment } from '@/lib/trustred/html'
 import { createLexicalTextContent } from '@/lib/trustred/lexical'
+import { defaultHomePage } from '@/lib/trustred/defaults'
+import { getMediaUsage } from '@/lib/trustred/media-usage'
 import { submitConfiguredForm, validatePublicFormSubmission } from '@/lib/trustred/public-forms'
 import { createInitialAdmin } from '@/lib/trustred/setup'
 import { parseSiteDateTime } from '@/lib/trustred/time'
@@ -29,9 +32,8 @@ let superAdmin: User
 let organizationAdmin: User
 const setupToken = process.env.SETUP_TOKEN ?? 'trustred-vitest-setup-token'
 
-vi.mock('next/headers', () => ({
-  headers: async () => new Headers({ 'x-real-ip': '203.0.113.19' }),
-}))
+const requestHeaders = vi.hoisted(() => new Headers({ 'x-real-ip': '203.0.113.19', 'user-agent': 'original' }))
+vi.mock('next/headers', () => ({ headers: async () => requestHeaders }))
 
 describe('security and correctness regressions', () => {
   beforeAll(async () => {
@@ -41,6 +43,21 @@ describe('security and correctness regressions', () => {
       where: { id: { exists: true } },
     })
     const suffix = `${process.pid}-${Date.now()}`
+
+    const anonymousRegistration = await handleEndpoints({
+      config: await config,
+      request: new Request('http://localhost/api/users/first-register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          displayName: 'Untrusted first user',
+          email: `untrusted-${suffix}@example.test`,
+          password: 'test-password-123',
+          roles: ['super-admin'],
+        }),
+      }),
+    })
+    expect(anonymousRegistration.status).toBe(403)
 
     const setupData = new FormData()
     setupData.set('admin.displayName', 'Security Test Super Admin')
@@ -57,6 +74,8 @@ describe('security and correctness regressions', () => {
         password: 'test-password-123',
         roles: ['organization-admin'],
       },
+      overrideAccess: false,
+      user: superAdmin,
     })) as User
   })
 
@@ -70,6 +89,147 @@ describe('security and correctness regressions', () => {
     await expect(createInitialAdmin(payload, setupData)).rejects.toThrow(
       'Initial admin can only be created while no users exist.',
     )
+  })
+
+  it('rejects same-site sibling REST writes with a logged-in cookie', async () => {
+    const login = await payload.login({
+      collection: 'users',
+      data: { email: superAdmin.email, password: 'test-password-123' },
+    })
+    expect(login.token).toBeTruthy()
+    const email = `sibling-${process.pid}-${Date.now()}@example.test`
+    const body = new FormData()
+    body.set('_payload', JSON.stringify({
+      displayName: 'Sibling registration',
+      email,
+      password: 'test-password-123',
+      roles: ['super-admin'],
+    }))
+    const siblingResponse = await handleEndpoints({
+      config: await config,
+      request: new Request('http://localhost:3000/api/users', {
+        method: 'POST',
+        body,
+        headers: {
+          cookie: `payload-token=${login.token}`,
+          origin: 'http://attacker.localhost:3000',
+          'sec-fetch-site': 'same-site',
+        },
+      }),
+    })
+    expect(siblingResponse.status).not.toBe(201)
+    expect((await payload.count({ collection: 'users', where: { email: { equals: email } } })).totalDocs).toBe(0)
+
+    const canonicalResponse = await handleEndpoints({
+      config: await config,
+      request: new Request('http://localhost:3000/api/users', {
+        method: 'POST',
+        body,
+        headers: {
+          cookie: `payload-token=${login.token}`,
+          origin: 'http://localhost:3000',
+          'sec-fetch-site': 'same-origin',
+        },
+      }),
+    })
+    expect(canonicalResponse.status).toBe(201)
+  })
+
+  it('revokes the current server session on editorial logout', async () => {
+    const login = await payload.login({
+      collection: 'users',
+      data: { email: superAdmin.email, password: 'test-password-123' },
+    })
+    const headers = new Headers({
+      cookie: `payload-token=${login.token}`,
+      origin: 'http://localhost:3000',
+    })
+    expect((await payload.auth({ headers })).user?.id).toBe(superAdmin.id)
+
+    const response = await editorialLogout(new Request('http://localhost:3000/manage/auth/logout', {
+      headers,
+      method: 'POST',
+    }))
+    expect(response.status).toBe(200)
+    expect((await payload.auth({ headers })).user).toBeNull()
+  })
+
+  it('keeps custom warning presets when a replacement fails validation or conflicts with a system key', async () => {
+    const suffix = `${process.pid}-${Date.now()}`
+    const originalKey = `original-${suffix}`
+    const systemKey = `system-${suffix}`
+    const original = await payload.create({
+      collection: 'warning-presets',
+      data: { isSystemPreset: false, key: originalKey, label: 'Original', provider: 'dwd', regionLabel: 'Berlin' },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    await payload.create({
+      collection: 'warning-presets',
+      data: {
+        isSystemPreset: true,
+        key: systemKey,
+        label: 'System',
+        provider: 'dwd',
+        regionLabel: 'Berlin',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+
+    const replacement = new FormData()
+    replacement.set('warningPresets.count', '1')
+    replacement.set('warningPresets.0.key', `new-${suffix}`)
+    replacement.set('warningPresets.0.provider', 'dwd')
+    replacement.set('warningPresets.0.regionLabel', 'Berlin')
+    await expect(saveWarningSettings(payload, superAdmin, replacement)).rejects.toThrow()
+
+    replacement.set('warningPresets.0.label', 'Replacement')
+    replacement.set('warningPresets.0.key', systemKey)
+    await expect(saveWarningSettings(payload, superAdmin, replacement)).rejects.toThrow()
+
+    const preserved = await payload.findByID({
+      collection: 'warning-presets',
+      id: original.id,
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    expect(preserved.key).toBe(originalKey)
+    expect(preserved.label).toBe('Original')
+  })
+
+  it('preserves customized pages and customer settings during demo cleanup', async () => {
+    const existingHome = await payload.find({ collection: 'pages', limit: 1, where: { slug: { equals: 'home' } } })
+    if (existingHome.docs[0]) {
+      await payload.update({
+        collection: 'pages',
+        id: existingHome.docs[0].id,
+        data: { title: 'Customer home' },
+        overrideAccess: false,
+        user: superAdmin,
+      })
+    } else {
+      await payload.create({
+        collection: 'pages',
+        data: { ...defaultHomePage, title: 'Customer home', _status: 'published' } as never,
+        overrideAccess: false,
+        user: superAdmin,
+      })
+    }
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      data: { contact: { email: 'customer@example.test' }, siteName: 'Customer name' },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+
+    await clearDemoData(payload, superAdmin)
+
+    const home = await payload.find({ collection: 'pages', limit: 1, where: { slug: { equals: 'home' } } })
+    const settings = await payload.findGlobal({ slug: 'site-settings' })
+    expect(home.docs[0]?.title).toBe('Customer home')
+    expect(settings.siteName).toBe('Customer name')
+    expect(settings.contact?.email).toBe('customer@example.test')
   })
 
   it('blocks form writes and submission access unless explicitly allowed', async () => {
@@ -143,6 +303,23 @@ describe('security and correctness regressions', () => {
         overrideAccess: false,
       }),
     ).rejects.toThrow()
+  })
+
+  it('rejects form fields whose submitted names collide after normalization', async () => {
+    await expect(payload.create({
+      collection: 'forms',
+      data: {
+        confirmationMessage: createLexicalTextContent('Danke'),
+        confirmationType: 'message',
+        fields: [
+          { blockType: 'text', label: 'First', name: 'user-name', required: true },
+          { blockType: 'text', label: 'Second', name: 'user name', required: true },
+        ],
+        title: 'Colliding field names',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })).rejects.toThrow('Duplicate form field name: user_name')
   })
 
   it('prevents non-super-admin privilege escalation', async () => {
@@ -327,6 +504,89 @@ describe('security and correctness regressions', () => {
     }
   })
 
+  it('blocks media deletion when site settings still reference it', async () => {
+    const data = Buffer.from('media usage fixture')
+    const media = await payload.create({
+      collection: 'media',
+      data: { alt: 'Usage fixture', category: 'general' },
+      file: { data, mimetype: 'text/plain', name: `usage-${Date.now()}.txt`, size: data.length },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      data: { theme: { logo: media.id } },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+
+    expect((await getMediaUsage(payload, media.id)).some((item) => item.source === 'Einstellungen')).toBe(true)
+    await expect(payload.delete({
+      collection: 'media',
+      id: media.id,
+      overrideAccess: false,
+      user: superAdmin,
+    })).rejects.toThrow('still referenced')
+    const login = await payload.login({
+      collection: 'users',
+      data: { email: superAdmin.email, password: 'test-password-123' },
+    })
+    const apiDeletion = await handleEndpoints({
+      config: await config,
+      request: new Request(`http://localhost:3000/api/media/${media.id}`, {
+        method: 'DELETE',
+        headers: {
+          cookie: `payload-token=${login.token}`,
+          origin: 'http://localhost:3000',
+        },
+      }),
+    })
+    expect(apiDeletion.status).toBe(409)
+
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      data: { theme: { logo: null } },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    await payload.delete({ collection: 'media', id: media.id, overrideAccess: false, user: superAdmin })
+  })
+
+  it('keeps media used by a published post even when its newer draft removes the image', async () => {
+    const data = Buffer.from('published image fixture')
+    const media = await payload.create({
+      collection: 'media',
+      data: { alt: 'Published image', category: 'news' },
+      file: { data, mimetype: 'text/plain', name: `published-image-${Date.now()}.txt`, size: data.length },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    const post = await payload.create({
+      collection: 'posts',
+      data: {
+        _status: 'published',
+        category: 'ausbildung',
+        content: 'Published content',
+        excerpt: 'Published excerpt',
+        featuredImage: media.id,
+        slug: `published-media-${Date.now()}`,
+        title: 'Published media post',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    await payload.update({
+      collection: 'posts',
+      data: { featuredImage: null },
+      draft: true,
+      id: post.id,
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    expect((await getMediaUsage(payload, media.id)).some((item) => item.href === `/manage/content/posts/${post.id}`)).toBe(true)
+    await expect(payload.delete({ collection: 'media', id: media.id, overrideAccess: false, user: superAdmin })).rejects.toThrow('still referenced')
+  })
+
   it('rejects SVG uploads containing scripts under the new Payload policy', async () => {
     const data = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>')
     await expect(
@@ -397,9 +657,11 @@ describe('security and correctness regressions', () => {
     })
     const reference = { id: form.id, kind: 'custom' } as const
     for (let i = 0; i < 5; i += 1) await submitConfiguredForm(reference, new FormData())
+    requestHeaders.set('user-agent', 'rotated')
     await expect(submitConfiguredForm(reference, new FormData())).rejects.toThrow(
       'Zu viele Formularanfragen',
     )
+    requestHeaders.set('user-agent', 'original')
   })
 
   it('parses German wall time independently from server timezone', () => {
@@ -437,6 +699,138 @@ describe('security and correctness regressions', () => {
     })
 
     expect(await getPublicFaqs()).toEqual([])
+  })
+
+  it('keeps a future event visible after more than 100 past events', async () => {
+    const suffix = `${process.pid}-${Date.now()}`
+    for (let index = 0; index < 101; index += 1) {
+      await payload.create({
+        collection: 'events',
+        data: {
+          eventType: 'uebung',
+          location: 'Test location',
+          slug: `past-${suffix}-${index}`,
+          startsAt: new Date(Date.UTC(2020, 0, 1 + index)).toISOString(),
+          summary: 'Past fixture',
+          title: `Past ${index}`,
+          visibility: 'public',
+        },
+        overrideAccess: false,
+        user: superAdmin,
+      })
+    }
+    const future = await payload.create({
+      collection: 'events',
+      data: {
+        eventType: 'uebung',
+        location: 'Test location',
+        slug: `future-${suffix}`,
+        startsAt: '2035-01-01T12:00:00.000Z',
+        summary: 'Future fixture',
+        title: 'Future event',
+        visibility: 'public',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    expect((await getPublicEvents()).some((event) => event.id === future.id)).toBe(true)
+    const secondArchivePage = await getPublicArchivedEvents(2)
+    expect(secondArchivePage.docs.length).toBeGreaterThan(0)
+    expect(secondArchivePage.totalPages).toBeGreaterThan(2)
+  })
+
+  it('loads the latest unpublished draft in the editorial editor', async () => {
+    const post = await payload.create({
+      collection: 'posts',
+      data: {
+        _status: 'published',
+        category: 'ausbildung',
+        content: 'Published content',
+        excerpt: 'Published excerpt',
+        slug: `draft-review-${Date.now()}`,
+        title: 'Published title',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    await payload.update({
+      collection: 'posts',
+      data: { title: 'Newer draft title' },
+      draft: true,
+      id: post.id,
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    const loaded = await loadCollectionDocById(payload, superAdmin, 'posts', post.id)
+    expect(loaded.title).toBe('Newer draft title')
+    const formData = new FormData()
+    formData.set('_status', 'draft')
+    formData.set('category', 'ausbildung')
+    formData.set('content', 'Newer draft content')
+    formData.set('excerpt', 'Newer draft excerpt')
+    formData.set('slug', post.slug)
+    formData.set('title', 'Edited draft title')
+    await saveCollectionDoc(payload, superAdmin, 'posts', String(post.id), formData)
+    const savedDraft = await payload.findByID({ collection: 'posts', draft: true, id: post.id })
+    const published = await payload.findByID({ collection: 'posts', id: post.id })
+    expect(savedDraft.title).toBe('Edited draft title')
+    expect(published.title).toBe('Published title')
+  })
+
+  it('clears optional dates and keeps an unchanged ambiguous autumn instant', async () => {
+    const event = await payload.create({
+      collection: 'events',
+      data: {
+        endsAt: '2026-10-25T03:30:00.000Z',
+        eventType: 'uebung',
+        location: 'Test location',
+        slug: `dst-edit-${Date.now()}`,
+        startsAt: '2026-10-25T00:30:00.000Z',
+        summary: 'DST fixture',
+        title: 'DST event',
+        visibility: 'public',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    const data = new FormData()
+    data.set('title', 'DST event')
+    data.set('slug', event.slug)
+    data.set('eventType', 'uebung')
+    data.set('visibility', 'public')
+    data.set('location', 'Test location')
+    data.set('summary', 'DST fixture')
+    data.set('startsAt', '2026-10-25T02:30')
+    data.set('endsAt', '')
+    await saveCollectionDoc(payload, superAdmin, 'events', String(event.id), data)
+    const saved = await payload.findByID({ collection: 'events', id: event.id })
+    expect(saved.startsAt).toBe('2026-10-25T00:30:00.000Z')
+    expect(saved.endsAt).toBeNull()
+
+    const post = await payload.create({
+      collection: 'posts',
+      data: {
+        _status: 'published',
+        category: 'ausbildung',
+        content: 'Date fixture content',
+        excerpt: 'Date fixture excerpt',
+        publishedAt: '2026-10-25T00:30:00.000Z',
+        slug: `optional-date-${Date.now()}`,
+        title: 'Optional date post',
+      },
+      overrideAccess: false,
+      user: superAdmin,
+    })
+    const postData = new FormData()
+    postData.set('_status', 'published')
+    postData.set('category', 'ausbildung')
+    postData.set('content', 'Date fixture content')
+    postData.set('excerpt', 'Date fixture excerpt')
+    postData.set('publishedAt', '')
+    postData.set('slug', post.slug)
+    postData.set('title', post.title)
+    await saveCollectionDoc(payload, superAdmin, 'posts', String(post.id), postData)
+    expect((await payload.findByID({ collection: 'posts', id: post.id })).publishedAt).toBeNull()
   })
 
   it('retries the additive migration safely on existing databases', async () => {
@@ -490,5 +884,7 @@ describe('security and correctness regressions', () => {
 
     const resolved = await getPageBySlug(`${parentSlug}/${childSlug}`)
     expect(resolved?.id).toBe(child.id)
+    const settings = await getSiteSettings()
+    expect(settings.navigation).toContainEqual({ href: `/${parentSlug}/${childSlug}`, label: 'Child page' })
   })
 })

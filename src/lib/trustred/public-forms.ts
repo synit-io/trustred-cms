@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 
-import type { Payload } from 'payload'
+import { createLocalReq, type Payload } from 'payload'
 
 import { getPayloadClient } from '@/lib/trustred/cms'
 import { createLexicalTextContent, readLexicalText } from '@/lib/trustred/lexical'
@@ -239,37 +239,52 @@ export async function submitConfiguredForm(reference: PublicFormReference, formD
         })
   const entries = validatePublicFormSubmission(form.fields ?? [], formData)
   const requestFingerprint = await getRequestFingerprint()
-  const recentSubmissions = await payload.find({
-    collection: 'form-submissions',
-    depth: 0,
-    limit: RATE_LIMIT_MAX_SUBMISSIONS,
-    overrideAccess: true,
-    where: {
-      and: [
-        { form: { equals: form.id } },
-        { requestFingerprint: { equals: requestFingerprint } },
-        {
-          createdAt: {
-            greater_than: new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString(),
-          },
-        },
-      ],
-    },
-  })
-
-  if (recentSubmissions.totalDocs >= RATE_LIMIT_MAX_SUBMISSIONS) {
-    throw new Error('Zu viele Formularanfragen. Bitte versuche es später erneut.')
+  const req = await createLocalReq({}, payload)
+  const transactionID = await payload.db.beginTransaction({ behavior: 'immediate' })
+  if (transactionID === null) {
+    throw new Error('Database transactions must be enabled for form submissions.')
   }
+  req.transactionID = transactionID
 
-  await payload.create({
-    collection: 'form-submissions',
-    data: {
-      form: form.id,
-      requestFingerprint,
-      submissionData: entries,
-    },
-    overrideAccess: true,
-  })
+  try {
+    const recentSubmissions = await payload.find({
+      collection: 'form-submissions',
+      depth: 0,
+      limit: RATE_LIMIT_MAX_SUBMISSIONS,
+      overrideAccess: true,
+      req,
+      where: {
+        and: [
+          { form: { equals: form.id } },
+          { requestFingerprint: { equals: requestFingerprint } },
+          {
+            createdAt: {
+              greater_than: new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString(),
+            },
+          },
+        ],
+      },
+    })
+
+    if (recentSubmissions.totalDocs >= RATE_LIMIT_MAX_SUBMISSIONS) {
+      throw new Error('Zu viele Formularanfragen. Bitte versuche es später erneut.')
+    }
+
+    await payload.create({
+      collection: 'form-submissions',
+      data: {
+        form: form.id,
+        requestFingerprint,
+        submissionData: entries,
+      },
+      overrideAccess: true,
+      req,
+    })
+    await payload.db.commitTransaction(transactionID)
+  } catch (error) {
+    await payload.db.rollbackTransaction(transactionID)
+    throw error
+  }
 
   return form
 }
@@ -343,8 +358,7 @@ async function getRequestFingerprint() {
   const requestHeaders = await headers()
   const forwardedFor = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim()
   const clientAddress = forwardedFor || requestHeaders.get('x-real-ip') || 'unknown'
-  const userAgent = requestHeaders.get('user-agent') || 'unknown'
   const secret = getPayloadSecret()
 
-  return createHmac('sha256', secret).update(`${clientAddress}\n${userAgent}`).digest('hex')
+  return createHmac('sha256', secret).update(clientAddress).digest('hex')
 }

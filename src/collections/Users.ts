@@ -43,8 +43,17 @@ export const Users: CollectionConfig = {
       },
     ],
     beforeChange: [
-      ({ data, originalDoc, req }) => {
+      ({ data, operation, originalDoc, req }) => {
         const actor = req.user as User | null | undefined
+        if (
+          operation === 'create' &&
+          !actor &&
+          req.context?.initialAdminBootstrap !== true &&
+          req.context?.trustedUserProvisioning !== true
+        ) {
+          throw new APIError('Anonymous user registration is disabled.', 403)
+        }
+
         if (!actor || userHasRole(actor, trustredRoles.superAdmin)) {
           return data
         }

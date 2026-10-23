@@ -29,7 +29,7 @@ export default async function PostDetailPage({ params }: Props) {
     notFound()
   }
 
-  const image = getMediaImage(post.featuredImage)
+  const image = getMediaImage(post.featuredImage, 'feature')
   const rawContent = String(post.content ?? '').trim()
   const paragraphs = String(post.content ?? '')
     .split(/\n\s*\n/g)

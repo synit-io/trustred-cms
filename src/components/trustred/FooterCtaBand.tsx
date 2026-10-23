@@ -18,9 +18,12 @@ type Banner = {
 export function FooterCtaBand({ banners }: { banners: Banner[] }) {
   const shouldRotate = banners.length > 1 && banners.some((banner) => banner.rotateOnPages)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [hasFocus, setHasFocus] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
   useEffect(() => {
-    if (!shouldRotate) {
+    if (!shouldRotate || isPaused || hasFocus || isHovered) {
       return
     }
 
@@ -29,12 +32,20 @@ export function FooterCtaBand({ banners }: { banners: Banner[] }) {
     }, 7000)
 
     return () => window.clearInterval(timer)
-  }, [banners.length, shouldRotate])
+  }, [banners.length, hasFocus, isHovered, isPaused, shouldRotate])
 
   const activeBanner = banners[Math.min(activeIndex, banners.length - 1)]
 
   return (
-    <section className="ff-inverse ff-gradient-band mt-16">
+    <section
+      className="ff-inverse ff-gradient-band mt-16"
+      onFocusCapture={() => setHasFocus(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false)
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="stripe-bg h-3" />
       <div className="site-container grid gap-6 py-10 lg:grid-cols-[1.2fr_auto] lg:items-center">
         <div>
@@ -49,10 +60,21 @@ export function FooterCtaBand({ banners }: { banners: Banner[] }) {
                   aria-pressed={index === activeIndex}
                   className={`h-2 w-8 rounded-full ${index === activeIndex ? 'bg-white' : 'bg-white/30 hover:bg-white/50'}`}
                   key={banner.key}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => {
+                    setActiveIndex(index)
+                    setIsPaused(true)
+                  }}
                   type="button"
                 />
               ))}
+              <button
+                aria-pressed={isPaused}
+                className="text-sm underline"
+                onClick={() => setIsPaused((paused) => !paused)}
+                type="button"
+              >
+                {isPaused ? 'Rotation fortsetzen' : 'Rotation pausieren'}
+              </button>
             </div>
           ) : null}
         </div>

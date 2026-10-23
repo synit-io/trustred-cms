@@ -142,16 +142,17 @@ export function getFaqPath(id: number | string) {
   return `/faq?open=${normalized}#faq-${normalized}`
 }
 
-export function getMediaImage(media?: number | Media | null) {
+export function getMediaImage(media?: number | Media | null, size?: 'card' | 'feature' | 'square') {
   if (!media || typeof media === 'number') {
     return null
   }
 
+  const variant = size ? media.sizes?.[size] : undefined
   return {
     alt: media.alt || '',
-    height: typeof media.height === 'number' ? media.height : 960,
-    src: media.url ?? media.thumbnailURL ?? null,
-    width: typeof media.width === 'number' ? media.width : 1440,
+    height: variant?.url ? (variant.height ?? media.height ?? 960) : (media.height ?? 960),
+    src: variant?.url ?? media.url ?? media.thumbnailURL ?? null,
+    width: variant?.url ? (variant.width ?? media.width ?? 1440) : (media.width ?? 1440),
   }
 }
 

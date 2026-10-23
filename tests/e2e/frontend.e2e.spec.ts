@@ -15,6 +15,8 @@ test.describe('Frontend', () => {
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'de')
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/)
+    await expect(page.getByRole('main')).toHaveCount(1)
+    await expect(page.locator('a[href="#main-content"]')).toHaveCount(1)
 
     const heading = page.locator('h1').first()
 

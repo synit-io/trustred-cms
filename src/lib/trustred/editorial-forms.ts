@@ -1,6 +1,8 @@
 import type { Payload } from 'payload'
 
 import { createLexicalTextContent, readLexicalText } from '@/lib/trustred/lexical'
+import { normalizeFormFieldName } from '@/lib/trustred/form-field-names'
+import { safeFormRedirectPath } from '@/lib/trustred/form-redirect'
 import type { Form, User } from '@/payload-types'
 
 type FormField = NonNullable<Form['fields']>[number]
@@ -52,15 +54,6 @@ function toOptionalString(value: FormDataEntryValue | null) {
   return normalized || undefined
 }
 
-function slugifyFieldName(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-}
-
 function clampWidth(value: unknown) {
   return Number(value) <= 50 ? 50 : 100
 }
@@ -101,7 +94,7 @@ function sanitizeField(field: EditableFormField, index: number): FormField | nul
 
   const label = String(field.label ?? '').trim()
   const baseName = String(field.name ?? '').trim() || label || `field_${index + 1}`
-  const name = slugifyFieldName(baseName) || `field_${index + 1}`
+  const name = normalizeFormFieldName(baseName) || `field_${index + 1}`
   const common = {
     label: label || undefined,
     name,
@@ -262,6 +255,12 @@ export async function saveEditorialForm(payload: Payload, user: User, id: string
     String(formData.get('confirmationType') ?? 'message') === 'redirect' ? 'redirect' : 'message'
   const confirmationMessageText = String(formData.get('confirmationMessageText') ?? '').trim()
   const redirectUrl = String(formData.get('redirectUrl') ?? '').trim()
+  const redirectPath = confirmationType === 'redirect'
+    ? safeFormRedirectPath(redirectUrl || '/')
+    : null
+  if (confirmationType === 'redirect' && !redirectPath) {
+    throw new Error('Redirect URL must be a local path beginning with /.')
+  }
   const fields = parseJson<EditableFormField[]>(formData.get('form.fields'), [])
     .map((field, index) => sanitizeField(field, index))
     .filter(Boolean) as Form['fields']
@@ -279,7 +278,7 @@ export async function saveEditorialForm(payload: Payload, user: User, id: string
     confirmationType,
     emails,
     fields,
-    redirect: confirmationType === 'redirect' ? { url: redirectUrl || '/' } : undefined,
+    redirect: confirmationType === 'redirect' ? { url: redirectPath || '/' } : undefined,
     submitButtonLabel,
     title,
   }

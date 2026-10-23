@@ -31,7 +31,7 @@ export default async function PostsIndexPage({ searchParams }: Props) {
     counts[post.category] = (counts[post.category] ?? 0) + 1
     return counts
   }, {})
-  const leadImage = leadPost ? getMediaImage(leadPost.featuredImage) : null
+  const leadImage = leadPost ? getMediaImage(leadPost.featuredImage, 'feature') : null
 
   return (
     <SiteShell pathname="/aktuelles" settings={settings}>
@@ -123,14 +123,14 @@ export default async function PostsIndexPage({ searchParams }: Props) {
                         <h2 className="text-[1.8rem] leading-[1.12]">{post.title}</h2>
                         <p className="mt-3 max-w-2xl text-sm leading-7 text-neutral-700">{post.excerpt}</p>
                       </div>
-                      {getMediaImage(post.featuredImage)?.src ? (
+                      {getMediaImage(post.featuredImage, 'card')?.src ? (
                         <div className="overflow-hidden rounded-xl border border-neutral-200">
                           <Image
-                            alt={getMediaImage(post.featuredImage)?.alt ?? ''}
+                            alt={getMediaImage(post.featuredImage, 'card')?.alt ?? ''}
                             className="h-28 w-full object-cover"
-                            height={getMediaImage(post.featuredImage)?.height ?? 960}
-                            src={getMediaImage(post.featuredImage)?.src ?? ''}
-                            width={getMediaImage(post.featuredImage)?.width ?? 1440}
+                            height={getMediaImage(post.featuredImage, 'card')?.height ?? 420}
+                            src={getMediaImage(post.featuredImage, 'card')?.src ?? ''}
+                            width={getMediaImage(post.featuredImage, 'card')?.width ?? 640}
                           />
                         </div>
                       ) : shouldShowImagePlaceholder(post) ? (

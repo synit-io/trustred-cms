@@ -1,25 +1,17 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import type { Where } from 'payload'
 
 import { getEditorialPermissions, requireEditorialContext } from '@/lib/trustred/editorial'
-import type { Media, Page, Post, Event, Operation, Crew, Equipment } from '@/payload-types'
+import { getMediaUsage } from '@/lib/trustred/media-usage'
+import type { Media } from '@/payload-types'
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-type MediaUsage = {
-  href: string
-  label: string
-  source: string
-}
-
 function readSearchValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
-}
-
-function matchesText(value: string, query: string) {
-  return value.toLowerCase().includes(query.toLowerCase())
 }
 
 function formatBytes(value?: number | null) {
@@ -34,117 +26,6 @@ function formatBytes(value?: number | null) {
   return `${Math.round(value / (1024 * 102.4)) / 10} MB`
 }
 
-function mediaInPageLayout(page: Page, mediaId: number) {
-  return (page.layout ?? []).some((block) => {
-    if (block.blockType !== 'hero') {
-      return false
-    }
-
-    const heroImage = block.heroImage
-
-    if (typeof heroImage === 'number') {
-      return heroImage === mediaId
-    }
-
-    if (heroImage && typeof heroImage === 'object' && 'id' in heroImage) {
-      return Number(heroImage.id) === mediaId
-    }
-
-    return false
-  })
-}
-
-function relationMatchesMediaId(value: unknown, mediaId: number) {
-  if (typeof value === 'number') {
-    return value === mediaId
-  }
-
-  if (value && typeof value === 'object' && 'id' in value) {
-    return Number(value.id) === mediaId
-  }
-
-  return false
-}
-
-async function getMediaUsage(payload: Awaited<ReturnType<typeof requireEditorialContext>>['payload'], user: Awaited<ReturnType<typeof requireEditorialContext>>['user'], mediaId: number) {
-  const [pages, posts, events, operations, crew, equipment] = await Promise.all([
-    payload.find({ collection: 'pages', limit: 200, overrideAccess: false, user }) as Promise<{ docs: Page[] }>,
-    payload.find({ collection: 'posts', limit: 200, overrideAccess: false, user }) as Promise<{ docs: Post[] }>,
-    payload.find({ collection: 'events', limit: 200, overrideAccess: false, user }) as Promise<{ docs: Event[] }>,
-    payload.find({ collection: 'operations', limit: 200, overrideAccess: false, user }) as Promise<{ docs: Operation[] }>,
-    payload.find({ collection: 'crew', limit: 200, overrideAccess: false, user }) as Promise<{ docs: Crew[] }>,
-    payload.find({ collection: 'equipment', limit: 200, overrideAccess: false, user }) as Promise<{ docs: Equipment[] }>,
-  ])
-
-  const usage: MediaUsage[] = []
-
-  for (const page of pages.docs) {
-    if (mediaInPageLayout(page, mediaId)) {
-      usage.push({
-        href: `/manage/content/pages/${page.id}`,
-        label: page.title,
-        source: 'Seite',
-      })
-    }
-  }
-
-  for (const post of posts.docs) {
-    if (relationMatchesMediaId(post.featuredImage, mediaId)) {
-      usage.push({
-        href: `/manage/content/posts/${post.id}`,
-        label: post.title,
-        source: 'Aktuelles',
-      })
-    }
-  }
-
-  for (const event of events.docs) {
-    if (relationMatchesMediaId(event.featuredImage, mediaId)) {
-      usage.push({
-        href: `/manage/content/events/${event.id}`,
-        label: event.title,
-        source: 'Termin',
-      })
-    }
-  }
-
-  for (const operation of operations.docs) {
-    if (relationMatchesMediaId(operation.featuredImage, mediaId)) {
-      usage.push({
-        href: `/manage/content/operations/${operation.id}`,
-        label: operation.operationNumber,
-        source: 'Einsatz',
-      })
-    }
-  }
-
-  for (const member of crew.docs) {
-    if (relationMatchesMediaId(member.portrait, mediaId)) {
-      usage.push({
-        href: `/manage/content/crew/${member.id}`,
-        label: member.name,
-        source: 'Crew',
-      })
-    }
-  }
-
-  for (const item of equipment.docs) {
-    const compartmentMatch = (item.compartments ?? []).some((compartment) =>
-      relationMatchesMediaId(compartment.image, mediaId),
-    )
-
-    if (relationMatchesMediaId(item.heroImage, mediaId) || compartmentMatch) {
-      usage.push({
-        href: `/manage/content/equipment/${item.id}`,
-        label: item.name,
-        source: 'Technik',
-      })
-    }
-  }
-
-  return usage
-}
-
 export default async function ManageMediaPage({ searchParams }: Props) {
   const { payload, user } = await requireEditorialContext()
   const permissions = getEditorialPermissions(user)
@@ -157,32 +38,41 @@ export default async function ManageMediaPage({ searchParams }: Props) {
   const query = readSearchValue(params.q)?.trim() ?? ''
   const category = readSearchValue(params.category)?.trim() ?? ''
   const selectedId = Number.parseInt(readSearchValue(params.selected) ?? '', 10)
+  const pageNumber = Math.max(1, Number.parseInt(readSearchValue(params.page) ?? '1', 10) || 1)
   const status = readSearchValue(params.status)?.trim() ?? ''
   const message = readSearchValue(params.message)?.trim() ?? ''
 
+  const filters: Where[] = []
+  if (category) filters.push({ category: { equals: category } })
+  if (query) filters.push({ or: [
+    { filename: { contains: query } },
+    { alt: { contains: query } },
+    { caption: { contains: query } },
+    { category: { contains: query } },
+  ] })
   const media = await payload.find({
     collection: 'media',
-    limit: 200,
+    limit: 24,
     overrideAccess: false,
+    page: pageNumber,
     sort: '-updatedAt',
     user,
+    where: filters.length > 0 ? { and: filters } : undefined,
   })
 
-  const filteredMedia = media.docs.filter((item) => {
-    if (category && item.category !== category) {
-      return false
-    }
+  const filteredMedia = media.docs
 
-    if (query) {
-      const haystack = [item.filename, item.alt, item.caption ?? '', item.category ?? ''].join(' ')
-      return matchesText(haystack, query)
-    }
-
-    return true
-  })
-
-  const selectedMedia = filteredMedia.find((item) => item.id === selectedId) ?? filteredMedia[0] ?? null
-  const usage = selectedMedia ? await getMediaUsage(payload, user, selectedMedia.id) : []
+  const selectedResult = Number.isFinite(selectedId) && !filteredMedia.some((item) => item.id === selectedId)
+    ? await payload.find({
+        collection: 'media',
+        limit: 1,
+        overrideAccess: false,
+        user,
+        where: { id: { equals: selectedId } },
+      })
+    : null
+  const selectedMedia = filteredMedia.find((item) => item.id === selectedId) ?? selectedResult?.docs[0] ?? filteredMedia[0] ?? null
+  const usage = selectedMedia ? await getMediaUsage(payload, selectedMedia.id) : []
 
   async function uploadAction(formData: FormData) {
     'use server'
@@ -246,7 +136,7 @@ export default async function ManageMediaPage({ searchParams }: Props) {
       redirect('/manage/media?status=error&message=Medium+nicht+gefunden')
     }
 
-    const currentUsage = await getMediaUsage(payload, user, id)
+    const currentUsage = await getMediaUsage(payload, id)
     if (currentUsage.length > 0) {
       redirect(`/manage/media?status=error&message=${encodeURIComponent('Medium wird noch verwendet und kann nicht geloescht werden')}&selected=${id}`)
     }
@@ -312,7 +202,7 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                 <p className="ff-kicker">Galerie</p>
                 <h3 className="text-2xl">Vorschau und Wiederverwendung</h3>
               </div>
-              <p className="text-sm text-neutral-600">{filteredMedia.length} Medien sichtbar</p>
+              <p className="text-sm text-neutral-600">{media.totalDocs} Medien gefunden</p>
             </div>
 
             {filteredMedia.length === 0 ? (
@@ -326,12 +216,12 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                     className={`rounded-2xl border p-3 shadow-card transition hover:-translate-y-0.5 ${
                       selectedMedia?.id === item.id ? 'border-[var(--brand-500)] bg-brand-50' : 'border-neutral-200 bg-white'
                     }`}
-                    href={`/manage/media?selected=${item.id}${category ? `&category=${encodeURIComponent(category)}` : ''}${query ? `&q=${encodeURIComponent(query)}` : ''}`}
+                    href={`/manage/media?selected=${item.id}&page=${pageNumber}${category ? `&category=${encodeURIComponent(category)}` : ''}${query ? `&q=${encodeURIComponent(query)}` : ''}`}
                     key={item.id}
                   >
                     {item.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img alt={item.alt} className="h-48 w-full rounded-xl object-cover" src={item.thumbnailURL ?? item.url} />
+                      <img alt={item.alt} className="h-48 w-full rounded-xl object-cover" loading="lazy" src={item.thumbnailURL ?? item.url} />
                     ) : (
                       <div className="ff-media-placeholder h-48 w-full">Keine Vorschau</div>
                     )}
@@ -347,6 +237,13 @@ export default async function ManageMediaPage({ searchParams }: Props) {
                 ))}
               </div>
             )}
+            {media.totalPages > 1 ? (
+              <nav aria-label="Mediathek-Seiten" className="flex items-center justify-between gap-3">
+                {media.hasPrevPage ? <Link className="ff-btn-ghost" href={`/manage/media?page=${pageNumber - 1}&category=${encodeURIComponent(category)}&q=${encodeURIComponent(query)}`}>Zurück</Link> : <span />}
+                <span>Seite {media.page} von {media.totalPages}</span>
+                {media.hasNextPage ? <Link className="ff-btn-ghost" href={`/manage/media?page=${pageNumber + 1}&category=${encodeURIComponent(category)}&q=${encodeURIComponent(query)}`}>Weiter</Link> : <span />}
+              </nav>
+            ) : null}
           </section>
         </div>
 

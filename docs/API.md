@@ -24,14 +24,17 @@ host, using `X-Forwarded-Host` when a trusted reverse proxy supplies it. Configu
 the proxy to overwrite forwarded headers rather than accepting client values.
 
 Payload locks an account after five failed attempts for ten minutes. Public
-forms allow five submissions per form and client fingerprint in ten minutes,
+forms allow five submissions per form and source-address fingerprint in ten minutes,
 with a honeypot and field validation. These controls do not constitute a global
 API traffic limit; configure that limit at the deployment's reverse proxy.
 
 Session cookies use `HttpOnly` and `SameSite=Lax`. Production HTTPS requests set
-`Secure`. Logout removes the browser cookie; it does not revoke copies of a token
-held by other clients.
+`Secure`. Editorial logout revokes the current server session and removes the
+browser cookie. Other signed-in devices keep their separate sessions.
 
 Media uploads reject files above 10 MiB through both Payload HTTP parsing and
 the Local API. Payload validates restricted file types. This project retains
 support for non-image attachments rather than introducing an image-only policy.
+Media deletion returns a conflict while a published page or post, its current
+draft, site settings, or another content record still references the file; this
+check applies to both the editorial workspace and Payload API.

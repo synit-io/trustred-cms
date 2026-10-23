@@ -24,7 +24,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="de" data-scroll-behavior="smooth">
       <body>
-        <main>{children}</main>
+        <div>{children}</div>
         <CookieConsentManager />
       </body>
     </html>

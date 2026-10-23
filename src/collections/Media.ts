@@ -1,6 +1,7 @@
 import { APIError, type CollectionConfig } from 'payload'
 
 import { hasRole, trustredRoles } from '@/access/hasRole'
+import { getMediaUsage } from '@/lib/trustred/media-usage'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -14,6 +15,12 @@ export const Media: CollectionConfig = {
     update: hasRole(trustredRoles.media),
   },
   hooks: {
+    beforeDelete: [async ({ id, req }) => {
+      const usage = await getMediaUsage(req.payload, Number(id), req)
+      if (usage.length > 0) {
+        throw new APIError('Media is still referenced and cannot be deleted.', 409)
+      }
+    }],
     beforeOperation: [
       ({ args, operation, req }) => {
         if (

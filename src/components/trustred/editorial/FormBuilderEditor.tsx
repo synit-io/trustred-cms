@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 import type { EditableFormEmail, EditableFormField, EditableFormFieldType } from '@/lib/trustred/editorial-forms'
+import { nextUniqueFormFieldName } from '@/lib/trustred/form-field-names'
 
 type Props = {
   initialEmails: EditableFormEmail[]
@@ -117,7 +118,11 @@ export function FormBuilderEditor({ initialEmails, initialFields }: Props) {
   function duplicateField(index: number) {
     setFields((current) => {
       const next = [...current]
-      next.splice(index + 1, 0, structuredClone(current[index]))
+      const duplicate = structuredClone(current[index])
+      if (duplicate.name) {
+        duplicate.name = nextUniqueFormFieldName(duplicate.name, current)
+      }
+      next.splice(index + 1, 0, duplicate)
       return next
     })
   }
@@ -150,7 +155,11 @@ export function FormBuilderEditor({ initialEmails, initialFields }: Props) {
             <button
               className="ff-btn-ghost"
               key={type}
-              onClick={() => setFields((current) => [...current, createField(type)])}
+              onClick={() => setFields((current) => {
+                const field = createField(type)
+                if (field.name) field.name = nextUniqueFormFieldName(field.name, current)
+                return [...current, field]
+              })}
               type="button"
             >
               + {fieldTypeLabels[type]}

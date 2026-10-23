@@ -65,6 +65,7 @@ Create `/opt/trustred-cms/.env`:
 DATABASE_URL=file:./data/trustred-cms.db
 PAYLOAD_SECRET=replace-with-the-generated-secret
 SETUP_TOKEN=replace-with-the-second-generated-secret
+TRUSTRED_PUBLIC_ORIGIN=https://cms.example.org
 SITE_TIMEZONE=Europe/Berlin
 TRUSTRED_RUN_MIGRATIONS=true
 
@@ -86,6 +87,10 @@ Keep `PAYLOAD_SECRET` stable. Replacing it invalidates existing sessions and may
 break data protected with that secret. The application requires `PAYLOAD_SECRET`
 in every environment. `SETUP_TOKEN` is required to create the first
 super-admin. Rotate it after setup and keep the replacement private.
+Set `TRUSTRED_PUBLIC_ORIGIN` to the exact browser origin of this installation,
+including `https://` and any non-default port. Payload uses it to reject
+cookie-authenticated REST writes from other origins. Production startup fails
+without it; changing the public host requires updating this setting.
 
 ## 3. Create the Compose file
 
@@ -105,6 +110,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-file:./data/trustred-cms.db}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
       SETUP_TOKEN: ${SETUP_TOKEN:?Set SETUP_TOKEN in .env}
+      TRUSTRED_PUBLIC_ORIGIN: ${TRUSTRED_PUBLIC_ORIGIN:?Set TRUSTRED_PUBLIC_ORIGIN in .env}
       SITE_TIMEZONE: ${SITE_TIMEZONE:-Europe/Berlin}
       TRUSTRED_RUN_MIGRATIONS: ${TRUSTRED_RUN_MIGRATIONS:-true}
     ports:

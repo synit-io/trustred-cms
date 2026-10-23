@@ -1,4 +1,4 @@
-import { getPayload } from 'payload'
+import { createLocalReq, getPayload } from 'payload'
 import config from '../../src/payload.config.js'
 import type { User } from '../../src/payload-types'
 
@@ -26,9 +26,11 @@ export async function seedTestUser(): Promise<void> {
   })
 
   // Create fresh test user
+  const req = await createLocalReq({ context: { trustedUserProvisioning: true } }, payload)
   const user = await payload.create({
     collection: 'users',
     data: testUser,
+    req,
   })
 
   await payload.updateGlobal({

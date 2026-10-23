@@ -4,13 +4,14 @@ import { getPageBySlug, getSiteSettings } from '@/lib/trustred/cms'
 import { getCurrentTimestamp } from '@/lib/trustred/time'
 
 type Props = {
+  archivePage?: number
   faqOpenId?: string | null
   pageSlug: string
   pathname: string
   submittedForm?: string | null
 }
 
-export async function ConfiguredPageRoute({ pageSlug, pathname, submittedForm, faqOpenId }: Props) {
+export async function ConfiguredPageRoute({ archivePage, pageSlug, pathname, submittedForm, faqOpenId }: Props) {
   const [page, settings] = await Promise.all([getPageBySlug(pageSlug), getSiteSettings()])
 
   if (!page) {
@@ -20,6 +21,7 @@ export async function ConfiguredPageRoute({ pageSlug, pathname, submittedForm, f
   return (
     <SiteShell pathname={pathname} settings={settings}>
       <PageRenderer
+        archivePage={archivePage}
         currentTimestamp={getCurrentTimestamp()}
         faqOpenId={faqOpenId}
         page={page}

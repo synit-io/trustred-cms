@@ -1,17 +1,15 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import type { Payload } from 'payload'
+import { createLocalReq, type Payload } from 'payload'
 
 import { trustredRoles, userHasRole } from '@/access/hasRole'
 import { getPayloadClient } from '@/lib/trustred/cms'
 import {
-  defaultHomePage,
-  defaultManagedPages,
-  defaultSiteSettings,
   fallbackFeedData,
 } from '@/lib/trustred/defaults'
 import { sanitizeHtmlFragment } from '@/lib/trustred/html'
+import { getMediaUsage } from '@/lib/trustred/media-usage'
 import {
   pageBlockLabels,
   type PageBlockType,
@@ -230,10 +228,16 @@ function toOptionalString(value: FormDataEntryValue | null) {
   return normalized || undefined
 }
 
-function toDateTime(value: FormDataEntryValue | null) {
+function toDateTime(value: FormDataEntryValue | null, original?: string | null) {
   const normalized = String(value ?? '').trim()
   if (!normalized) return undefined
+  if (original && formatSiteDateTimeInput(original) === normalized) return original
   return parseSiteDateTime(normalized)
+}
+
+function toOptionalDateTime(value: FormDataEntryValue | null, original?: string | null) {
+  if (!String(value ?? '').trim()) return null
+  return toDateTime(value, original)
 }
 
 function parseJson<T = unknown>(value: FormDataEntryValue | null, fallback: T): T {
@@ -806,6 +810,7 @@ async function parseCollectionData(
   user: User,
   collection: EditorialCollectionSlug,
   formData: FormData,
+  originalDoc?: Record<string, unknown> | null,
 ) {
   const normalizedSlug = (value: FormDataEntryValue | null) =>
     toPublicSlug(String(value ?? '').trim())
@@ -835,7 +840,7 @@ async function parseCollectionData(
         content: String(formData.get('content') ?? '').trim(),
         excerpt: String(formData.get('excerpt') ?? '').trim(),
         featuredImage: parseMediaRelation(uploadedFeaturedImageId, formData.get('featuredImage')),
-        publishedAt: toDateTime(formData.get('publishedAt')),
+        publishedAt: toOptionalDateTime(formData.get('publishedAt'), originalDoc?.publishedAt as string | null),
         showImagePlaceholder: toBoolean(formData.get('showImagePlaceholder')),
         slug: normalizedSlug(formData.get('slug')),
         title: String(formData.get('title') ?? '').trim(),
@@ -853,10 +858,10 @@ async function parseCollectionData(
         featuredImage: parseMediaRelation(uploadedFeaturedImageId, formData.get('featuredImage')),
         location: String(formData.get('location') ?? '').trim(),
         registrationEnabled: toBoolean(formData.get('registrationEnabled')),
-        endsAt: toDateTime(formData.get('endsAt')),
+        endsAt: toOptionalDateTime(formData.get('endsAt'), originalDoc?.endsAt as string | null),
         showImagePlaceholder: toBoolean(formData.get('showImagePlaceholder')),
         slug: normalizedSlug(formData.get('slug')),
-        startsAt: toDateTime(formData.get('startsAt')),
+        startsAt: toDateTime(formData.get('startsAt'), originalDoc?.startsAt as string | null),
         summary: String(formData.get('summary') ?? '').trim(),
         title: String(formData.get('title') ?? '').trim(),
         visibility: String(formData.get('visibility') ?? 'public').trim(),
@@ -878,7 +883,7 @@ async function parseCollectionData(
         location: String(formData.get('location') ?? '').trim(),
         operationNumber: String(formData.get('operationNumber') ?? '').trim(),
         showImagePlaceholder: toBoolean(formData.get('showImagePlaceholder')),
-        startedAt: toDateTime(formData.get('startedAt')),
+        startedAt: toDateTime(formData.get('startedAt'), originalDoc?.startedAt as string | null),
         summary: String(formData.get('summary') ?? '').trim(),
       }
     }
@@ -959,6 +964,7 @@ export async function loadCollectionDocs(
 ) {
   const result = await payload.find({
     collection,
+    draft: collection === 'pages' || collection === 'posts',
     limit: 100,
     overrideAccess: false,
     sort: '-updatedAt',
@@ -976,6 +982,7 @@ export async function loadCollectionDocById(
 ) {
   return (await payload.findByID({
     collection,
+    draft: collection === 'pages' || collection === 'posts',
     id,
     overrideAccess: false,
     user,
@@ -989,12 +996,24 @@ export async function saveCollectionDoc(
   id: string | null,
   formData: FormData,
 ) {
-  const data = await parseCollectionData(payload, user, collection, formData)
+  const originalDoc =
+    id && id !== 'new' && ['posts', 'events', 'operations'].includes(collection)
+      ? ((await payload.findByID({
+          collection,
+          draft: collection === 'posts',
+          id: Number(id),
+          overrideAccess: false,
+          user,
+        })) as unknown as Record<string, unknown>)
+      : null
+  const data = await parseCollectionData(payload, user, collection, formData, originalDoc)
+  const draft = (collection === 'pages' || collection === 'posts') && formData.get('_status') === 'draft'
 
   if (id && id !== 'new') {
     return payload.update({
       collection,
       data,
+      draft,
       id: Number(id),
       overrideAccess: false,
       user,
@@ -1004,6 +1023,7 @@ export async function saveCollectionDoc(
   return payload.create({
     collection,
     data,
+    draft,
     overrideAccess: false,
     user,
   } as never)
@@ -1030,29 +1050,6 @@ const demoMediaAlts = [
   'Unwettereinsatz der Freiwilligen Feuerwehr Musterstadt',
   'Übungsabend der Freiwilligen Feuerwehr Musterstadt',
 ]
-
-const cleanSiteSettings = {
-  ...defaultSiteSettings,
-  announcement: {
-    enabled: false,
-    label: '',
-    message: '',
-  },
-  contact: {
-    address: '',
-    email: '',
-    emergencyNumber: '112',
-  },
-  departmentName: 'Ihre Organisation',
-  legal: {
-    imprintText: '',
-    organizationName: '',
-    responsiblePerson: '',
-  },
-  siteName: 'Ihre Organisation',
-  taglinePrimary: 'Schnell startklar.',
-  taglineSecondary: 'Inhalte, Navigation und Formulare direkt anpassen.',
-}
 
 const cleanBasePages = [
   {
@@ -1284,24 +1281,20 @@ export async function clearDemoData(payload: Payload, user: User) {
     }),
   }
 
-  deleted.pages = await deleteDocsByValues({
-    collection: 'pages',
-    field: 'slug',
-    payload,
-    values: [defaultHomePage.slug, ...defaultManagedPages.map((page) => page.slug)],
-  })
-  deleted.media = await deleteDocsByValues({
+  // Existing pages have no reliable seed provenance; preserve them and customer settings.
+  deleted.pages = 0
+  const demoMedia = await payload.find({
     collection: 'media',
-    field: 'alt',
-    payload,
-    values: demoMediaAlts,
-  })
-
-  await payload.updateGlobal({
-    slug: 'site-settings',
-    data: cleanSiteSettings,
+    limit: 0,
     overrideAccess: true,
+    where: { alt: { in: demoMediaAlts } },
   })
+  deleted.media = 0
+  for (const medium of demoMedia.docs) {
+    if ((await getMediaUsage(payload, medium.id)).length > 0) continue
+    await payload.delete({ collection: 'media', id: medium.id, overrideAccess: true })
+    deleted.media += 1
+  }
   await restoreBuiltInWarningPresets(payload)
   await ensureDefaultPublicForms(payload)
   await ensureCleanBasePages(payload)
@@ -1418,33 +1411,60 @@ export async function sendSmtpTestEmail(
 
 export async function saveWarningSettings(payload: Payload, user: User, formData: FormData) {
   const presets = parseWarningPresets(formData)
-  const existing = await payload.find({
-    collection: 'warning-presets',
-    limit: 200,
-    overrideAccess: false,
-    user,
-  })
-
-  const customExisting = existing.docs.filter((doc) => doc.isSystemPreset !== true)
-
-  for (const preset of customExisting) {
-    await payload.delete({
-      collection: 'warning-presets',
-      id: preset.id,
-      overrideAccess: false,
-      user,
-    })
+  const keys = new Set<string>()
+  for (const preset of presets) {
+    if (
+      !preset.key ||
+      !preset.label ||
+      !preset.regionLabel ||
+      !['dwd', 'nina'].includes(preset.provider)
+    ) {
+      throw new Error('All custom warning presets need a key, label, provider, and region label.')
+    }
+    if (keys.has(preset.key)) {
+      throw new Error(`Duplicate warning preset key: ${preset.key}`)
+    }
+    keys.add(preset.key)
   }
 
-  for (const preset of presets) {
-    await payload.create({
+  const req = await createLocalReq({ user }, payload)
+  const transactionID = await payload.db.beginTransaction({ behavior: 'immediate' })
+  if (transactionID === null) {
+    throw new Error('Database transactions must be enabled for warning preset changes.')
+  }
+  req.transactionID = transactionID
+
+  try {
+    const existing = await payload.find({
       collection: 'warning-presets',
-      data: {
-        ...preset,
-        isSystemPreset: false,
-      },
+      limit: 0,
       overrideAccess: false,
+      req,
       user,
     })
+    for (const preset of existing.docs) {
+      if (preset.isSystemPreset === true) continue
+      await payload.delete({
+        collection: 'warning-presets',
+        id: preset.id,
+        overrideAccess: false,
+        req,
+        user,
+      })
+    }
+
+    for (const preset of presets) {
+      await payload.create({
+        collection: 'warning-presets',
+        data: { ...preset, isSystemPreset: false },
+        overrideAccess: false,
+        req,
+        user,
+      })
+    }
+    await payload.db.commitTransaction(transactionID)
+  } catch (error) {
+    await payload.db.rollbackTransaction(transactionID)
+    throw error
   }
 }

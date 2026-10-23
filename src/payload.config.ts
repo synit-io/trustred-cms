@@ -5,7 +5,7 @@ import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
-import { buildConfig } from 'payload'
+import { APIError, buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
@@ -23,9 +23,10 @@ import { Posts } from './collections/Posts'
 import { SiteSettings } from './globals/SiteSettings'
 import { SetupState } from './globals/SetupState'
 import { runtimeSMTPAdapter } from './lib/trustred/runtime-email-adapter'
-import { getPayloadSecret, validateStorageEnvironment } from './lib/trustred/environment'
+import { getPayloadSecret, getPublicOrigin, validateStorageEnvironment } from './lib/trustred/environment'
 import { getSiteTimeZone } from './lib/trustred/time'
 import { auditLogging } from './lib/trustred/audit-logging'
+import { findDuplicateFormFieldName } from './lib/trustred/form-field-names'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -69,6 +70,7 @@ function getStoragePlugin() {
 }
 
 const configuredPayloadSecret = getPayloadSecret()
+const publicOrigin = getPublicOrigin()
 validateStorageEnvironment()
 getSiteTimeZone()
 const storagePlugin = getStoragePlugin()
@@ -95,6 +97,7 @@ export default buildConfig({
   editor: lexicalEditor(),
   globals: [SiteSettings, SetupState],
   secret: configuredPayloadSecret,
+  csrf: [publicOrigin],
   upload: { abortOnLimit: true, limits: { fileSize: 10 * 1024 * 1024 } },
   email: runtimeSMTPAdapter,
   typescript: {
@@ -144,6 +147,16 @@ export default buildConfig({
           delete: hasRole(trustredRoles.content),
           read: hasRole(trustredRoles.content),
           update: hasRole(trustredRoles.content),
+        },
+        hooks: {
+          beforeValidate: [({ data }) => {
+            if (!Array.isArray(data?.fields)) return data
+            const duplicate = findDuplicateFormFieldName(data.fields)
+            if (duplicate) {
+              throw new APIError(`Duplicate form field name: ${duplicate}`, 400)
+            }
+            return data
+          }],
         },
       },
       formSubmissionOverrides: {

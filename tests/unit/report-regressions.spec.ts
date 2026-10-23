@@ -8,10 +8,11 @@ import {
   formatMonthYear,
 } from '@/lib/trustred/public-content'
 
-const { login, count, getFeedItems, getPublicCrew, getPublicEvents } = vi.hoisted(() => ({
+const { login, count, getFeedItems, getPublicArchivedEvents, getPublicCrew, getPublicEvents } = vi.hoisted(() => ({
   login: vi.fn(),
   count: vi.fn(),
   getFeedItems: vi.fn().mockResolvedValue([]),
+  getPublicArchivedEvents: vi.fn().mockResolvedValue({ docs: [], page: 1, totalPages: 1 }),
   getPublicCrew: vi.fn().mockResolvedValue([]),
   getPublicEvents: vi.fn().mockResolvedValue([]),
 }))
@@ -19,6 +20,7 @@ const { login, count, getFeedItems, getPublicCrew, getPublicEvents } = vi.hoiste
 vi.mock('@/lib/trustred/cms', () => ({
   getPayloadClient: async () => ({ login, count }),
   getFeedItems,
+  getPublicArchivedEvents,
   getPublicCrew,
   getPublicEvents,
 }))
@@ -45,6 +47,7 @@ describe('analysis report regressions', () => {
     'skips unused generic feed queries on %s',
     async (pathname) => {
       getFeedItems.mockClear()
+      getPublicArchivedEvents.mockClear()
       getPublicCrew.mockClear()
       getPublicEvents.mockClear()
       await PageRenderer({
@@ -63,7 +66,12 @@ describe('analysis report regressions', () => {
         pathname,
       })
       expect(getFeedItems).not.toHaveBeenCalled()
-      expect(pathname === '/team' ? getPublicCrew : getPublicEvents).toHaveBeenCalledTimes(1)
+      const expectedQuery = pathname === '/team'
+        ? getPublicCrew
+        : pathname === '/termine/archiv'
+          ? getPublicArchivedEvents
+          : getPublicEvents
+      expect(expectedQuery).toHaveBeenCalledTimes(1)
     },
   )
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 
 import {
   cookieConsentChangeEvent,
@@ -91,6 +92,7 @@ export function CookieConsentManager() {
   )
   const consentState = useMemo(() => parseCookieConsentSnapshot(consentSnapshot), [consentSnapshot])
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const [draftPreferences, setDraftPreferences] = useState({
     analytics: false,
     externalMedia: false,
@@ -114,6 +116,51 @@ export function CookieConsentManager() {
       window.removeEventListener(cookieConsentOpenManagerEvent, handleOpenManager)
     }
   }, [])
+
+  useEffect(() => {
+    if (!settingsOpen) return
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const background = Array.from(document.body.children).filter(
+      (element): element is HTMLElement => element instanceof HTMLElement && element !== dialog,
+    )
+    const priorInert = background.map((element) => element.inert === true)
+    background.forEach((element) => { element.inert = true })
+    const focusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]'
+    const focusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+    focusable()[0]?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setSettingsOpen(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const controls = focusable()
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (!first || !last) return
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      } else if (!dialog?.contains(document.activeElement)) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      background.forEach((element, index) => { element.inert = priorInert[index] })
+      if (previouslyFocused?.isConnected) previouslyFocused.focus()
+    }
+  }, [settingsOpen])
 
   const hasDecision = Boolean(consentState)
 
@@ -179,15 +226,24 @@ export function CookieConsentManager() {
         </svg>
       </button>
 
-      {settingsOpen ? (
+      {settingsOpen && typeof document !== 'undefined' ? createPortal(
         <div
           className="ff-cookie-modal"
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label="Cookie-Einstellungen"
         >
           <div className="ff-cookie-modal__backdrop" onClick={() => setSettingsOpen(false)} />
           <div className="ff-cookie-modal__panel">
+            <button
+              aria-label="Cookie-Einstellungen schließen"
+              className="ff-btn-ghost ml-auto block min-h-9 px-3"
+              onClick={() => setSettingsOpen(false)}
+              type="button"
+            >
+              Schließen
+            </button>
             <div>
               <p className="ff-kicker">Datenschutzcenter</p>
               <h3 className="text-2xl">Cookie- und Plugin-Einstellungen</h3>
@@ -279,7 +335,8 @@ export function CookieConsentManager() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   )

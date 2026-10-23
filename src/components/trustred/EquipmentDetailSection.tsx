@@ -26,7 +26,7 @@ export function EquipmentDetailSection({
   showHighlights = true,
   title,
 }: Props) {
-  const image = getMediaImage(item.heroImage)
+  const image = getMediaImage(item.heroImage, 'feature')
   const facts = item.facts ?? []
   const compartments = item.compartments ?? []
   const highlights = item.highlights ?? []

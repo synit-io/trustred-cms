@@ -17,6 +17,7 @@ import { YouTubeConsentEmbed } from '@/components/trustred/YouTubeConsentEmbed'
 import {
   getFeedItems,
   getPublicCrew,
+  getPublicArchivedEvents,
   getPublicEquipment,
   getPublicEquipmentById,
   getPublicEvents,
@@ -48,6 +49,7 @@ import { getWarningSnapshotFromConfig } from '@/lib/trustred/warnings'
 import { getSiteTimeZone } from '@/lib/trustred/time'
 
 type Props = {
+  archivePage?: number
   faqOpenId?: string | null
   page: {
     layout?: PageBlock[] | null
@@ -207,14 +209,9 @@ const dateFormat = new Intl.DateTimeFormat('de-DE', {
   timeZone: getSiteTimeZone(),
 })
 
-function imageUrl(media?: number | Media | null) {
-  if (!media || typeof media === 'number') return null
-  return media.url ?? media.thumbnailURL ?? null
-}
-
 function renderFeedCard(source: string, item: Record<string, unknown>, index: number) {
   if (source === 'posts') {
-    const image = getMediaImage((item.featuredImage as Media | number | null | undefined) ?? null)
+    const image = getMediaImage((item.featuredImage as Media | number | null | undefined) ?? null, 'card')
     const slug = typeof item.slug === 'string' ? item.slug : ''
     return (
       <article className="ff-card grid gap-4" key={index}>
@@ -259,7 +256,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
 
   if (source === 'events') {
     const slug = typeof item.slug === 'string' ? item.slug : ''
-    const image = getMediaImage((item.featuredImage as Media | number | null | undefined) ?? null)
+    const image = getMediaImage((item.featuredImage as Media | number | null | undefined) ?? null, 'card')
     return (
       <article className="ff-card grid gap-4" key={index}>
         {image?.src ? (
@@ -304,7 +301,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
 
   if (source === 'crew') {
     const skills = Array.isArray(item.skills) ? item.skills : []
-    const portrait = getMediaImage((item.portrait as Media | number | null | undefined) ?? null)
+    const portrait = getMediaImage((item.portrait as Media | number | null | undefined) ?? null, 'square')
     const crewId = typeof item.id === 'number' || typeof item.id === 'string' ? item.id : null
     return (
       <article className="ff-card grid gap-4" key={index}>
@@ -344,7 +341,7 @@ function renderFeedCard(source: string, item: Record<string, unknown>, index: nu
 
   if (source === 'equipment') {
     const facts = Array.isArray(item.facts) ? item.facts : []
-    const image = getMediaImage((item.heroImage as Media | number | null | undefined) ?? null)
+    const image = getMediaImage((item.heroImage as Media | number | null | undefined) ?? null, 'card')
     const slug = typeof item.slug === 'string' ? item.slug : ''
     return (
       <article className="ff-card grid gap-4" key={index}>
@@ -430,6 +427,7 @@ function getFeedOverviewPath(source: FeedSource) {
 }
 
 export async function PageRenderer({
+  archivePage = 1,
   currentTimestamp,
   faqOpenId,
   page,
@@ -440,8 +438,8 @@ export async function PageRenderer({
     (page.layout ?? []).map(async (block, index) => {
       if (block.blockType === 'hero') {
         const heroBlock = block as unknown as HeroBlockData
-        const mediaSrc = imageUrl(heroBlock.heroImage)
-        const emergencyNumber = mediaSrc
+        const heroImage = getMediaImage(heroBlock.heroImage, 'feature')
+        const emergencyNumber = heroImage?.src
           ? null
           : ((await getSiteSettings()).contact?.emergencyNumber ?? '112')
 
@@ -466,27 +464,13 @@ export async function PageRenderer({
                 </div>
               </div>
               <div className="rounded-2xl border border-border-subtle bg-white p-3 shadow-card">
-                {mediaSrc ? (
+                {heroImage?.src ? (
                   <Image
-                    alt={
-                      typeof heroBlock.heroImage === 'object' && heroBlock.heroImage?.alt
-                        ? heroBlock.heroImage.alt
-                        : ''
-                    }
+                    alt={heroImage.alt}
                     className="h-[26rem] w-full rounded-xl object-cover"
-                    height={
-                      typeof heroBlock.heroImage === 'object' &&
-                      typeof heroBlock.heroImage?.height === 'number'
-                        ? heroBlock.heroImage.height
-                        : 960
-                    }
-                    src={mediaSrc}
-                    width={
-                      typeof heroBlock.heroImage === 'object' &&
-                      typeof heroBlock.heroImage?.width === 'number'
-                        ? heroBlock.heroImage.width
-                        : 1440
-                    }
+                    height={heroImage.height}
+                    src={heroImage.src}
+                    width={heroImage.width}
                   />
                 ) : (
                   <div className="ff-hero-fallback">
@@ -571,8 +555,10 @@ export async function PageRenderer({
           ? []
           : await getFeedItems(feedBlock.source, feedBlock.limit)
         const directoryCrew = routeIsTeamDirectory ? await getPublicCrew() : null
-        const routeEvents =
-          routeIsUpcomingEvents || routeIsArchivedEvents ? await getPublicEvents() : null
+        const archivedEvents = routeIsArchivedEvents ? await getPublicArchivedEvents(archivePage) : null
+        const routeEvents = routeIsUpcomingEvents
+          ? await getPublicEvents()
+          : archivedEvents?.docs ?? null
 
         return (
           <section className="ff-section" key={index}>
@@ -589,9 +575,10 @@ export async function PageRenderer({
                 </>
               )}
               {feedBlock.source === 'operations' ? (
-                <OperationsTable operations={items as Operation[]} />
+                <OperationsTable operations={items as Operation[]} timeZone={getSiteTimeZone()} />
               ) : routeIsUpcomingEvents || routeIsArchivedEvents ? (
                 <EventsAgendaSection
+                  archivePagination={archivedEvents ? { page: archivedEvents.page, totalPages: archivedEvents.totalPages } : undefined}
                   currentTimestamp={currentTimestamp}
                   eyebrow={feedBlock.eyebrow}
                   events={routeEvents ?? []}
@@ -708,32 +695,34 @@ export async function PageRenderer({
           }
         }
 
-        const snapshot = await getWarningSnapshotFromConfig({
-          dwdRegionIds: warningsBlock.dwdRegionIds,
-          dwdStates: warningsBlock.dwdStates,
-          forecastUrl: warningsBlock.forecastUrl,
-          ninaArs: warningsBlock.ninaArs,
-          provider: warningsBlock.provider,
-          regionLabel: warningsBlock.regionLabel,
-          showWeatherMap: warningsBlock.showWeatherMap,
-          showWildfireMap: warningsBlock.showWildfireMap,
-          sourceUrl: warningsBlock.sourceUrl,
-          warningMapUrl: warningsBlock.warningMapUrl,
-          weatherMapUrl: warningsBlock.weatherMapUrl,
-          wildfireMapUrl: warningsBlock.wildfireMapUrl,
-        })
         const ninaPreset =
           warningsBlock.provider === 'dwd' && warningsBlock.ninaPresetKey
             ? findWarningPreset(presets, warningsBlock.ninaPresetKey, 'nina')
             : null
-        const ninaSnapshot = ninaPreset
-          ? await getWarningSnapshotFromConfig({
-              ninaArs: ninaPreset.ninaArs,
-              provider: 'nina',
-              regionLabel: ninaPreset.regionLabel,
-              sourceUrl: ninaPreset.sourceUrl,
-            })
-          : null
+        const [snapshot, ninaSnapshot] = await Promise.all([
+          getWarningSnapshotFromConfig({
+            dwdRegionIds: warningsBlock.dwdRegionIds,
+            dwdStates: warningsBlock.dwdStates,
+            forecastUrl: warningsBlock.forecastUrl,
+            ninaArs: warningsBlock.ninaArs,
+            provider: warningsBlock.provider,
+            regionLabel: warningsBlock.regionLabel,
+            showWeatherMap: warningsBlock.showWeatherMap,
+            showWildfireMap: warningsBlock.showWildfireMap,
+            sourceUrl: warningsBlock.sourceUrl,
+            warningMapUrl: warningsBlock.warningMapUrl,
+            weatherMapUrl: warningsBlock.weatherMapUrl,
+            wildfireMapUrl: warningsBlock.wildfireMapUrl,
+          }),
+          ninaPreset
+            ? getWarningSnapshotFromConfig({
+                ninaArs: ninaPreset.ninaArs,
+                provider: 'nina',
+                regionLabel: ninaPreset.regionLabel,
+                sourceUrl: ninaPreset.sourceUrl,
+              })
+            : Promise.resolve(null),
+        ])
 
         return (
           <section className="ff-section" key={index}>

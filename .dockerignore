@@ -9,9 +9,7 @@ data/
 docs/
 node_modules/
 .DS_Store
-.env
-.env.example
-.env.test
+.env*
 
 Dockerfile
 docker-compose.yml

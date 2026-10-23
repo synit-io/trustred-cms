@@ -22,7 +22,7 @@ export default async function CrewDetailPage({ params }: Props) {
     notFound()
   }
 
-  const portrait = getMediaImage(member.portrait)
+  const portrait = getMediaImage(member.portrait, 'square')
   const relatedCrew = crew
     .filter((entry) => entry.id !== member.id)
     .sort((left, right) => {

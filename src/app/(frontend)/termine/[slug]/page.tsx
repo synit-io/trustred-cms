@@ -28,7 +28,7 @@ export default async function EventDetailPage({ params }: Props) {
     notFound()
   }
 
-  const eventImage = getMediaImage(event.featuredImage)
+  const eventImage = getMediaImage(event.featuredImage, 'feature')
   const relatedEvents = events.filter((entry) => entry.slug !== event.slug).slice(0, 3)
 
   return (

@@ -1,18 +1,20 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { OperationsTable } from '@/components/trustred/OperationsTable'
 import { getOperationMeta } from '@/lib/trustred/operations'
 import type { Operation } from '@/payload-types'
 
-export function OperationsArchive({ operations }: { operations: Operation[] }) {
+export function OperationsArchive({ operations, timeZone }: { operations: Operation[]; timeZone: string }) {
+  const yearFormat = useMemo(() => new Intl.DateTimeFormat('en', { timeZone, year: 'numeric' }), [timeZone])
+  const yearFor = useCallback((operation: Operation) => yearFormat.format(new Date(operation.startedAt)), [yearFormat])
   const years = useMemo(
     () =>
-      Array.from(new Set(operations.map((operation) => new Date(operation.startedAt).getFullYear().toString()))).sort(
+      Array.from(new Set(operations.map(yearFor))).sort(
         (left, right) => Number(right) - Number(left),
       ),
-    [operations],
+    [operations, yearFor],
   )
   const categories = useMemo(
     () =>
@@ -32,12 +34,12 @@ export function OperationsArchive({ operations }: { operations: Operation[] }) {
   const filtered = useMemo(
     () =>
       operations.filter((operation) => {
-        const year = new Date(operation.startedAt).getFullYear().toString()
+        const year = yearFor(operation)
         const yearMatch = selectedYear === 'all' || year === selectedYear
         const categoryMatch = selectedCategory === 'all' || operation.category === selectedCategory
         return yearMatch && categoryMatch
       }),
-    [operations, selectedCategory, selectedYear],
+    [operations, selectedCategory, selectedYear, yearFor],
   )
 
   return (
@@ -83,7 +85,7 @@ export function OperationsArchive({ operations }: { operations: Operation[] }) {
         </div>
       </div>
 
-      <OperationsTable operations={filtered} />
+      <OperationsTable operations={filtered} timeZone={timeZone} />
       <p className="text-sm text-neutral-600" role="status">
         {filtered.length} von {operations.length} Einsätzen sichtbar.
       </p>

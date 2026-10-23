@@ -656,11 +656,11 @@ export async function getWarningSnapshotFromConfig(
 ): Promise<WarningSnapshot | null> {
   try {
     if (config.provider === 'dwd') {
-      return getDwdSnapshot(config)
+      return await getDwdSnapshot(config)
     }
 
     if (config.provider === 'nina') {
-      return getNinaSnapshot(config)
+      return await getNinaSnapshot(config)
     }
   } catch (error) {
     return {

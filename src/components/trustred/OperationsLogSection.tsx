@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { OperationsArchive } from '@/components/trustred/OperationsArchive'
 import { OperationsTable } from '@/components/trustred/OperationsTable'
 import { getOperationMeta } from '@/lib/trustred/operations'
+import { getSiteTimeZone } from '@/lib/trustred/time'
 import type { Operation } from '@/payload-types'
 
 type Props = {
@@ -54,7 +55,7 @@ export function OperationsLogSection({
         </div>
       ) : null}
 
-      {showFilters ? <OperationsArchive operations={visibleOperations} /> : <OperationsTable operations={visibleOperations} />}
+      {showFilters ? <OperationsArchive operations={visibleOperations} timeZone={getSiteTimeZone()} /> : <OperationsTable operations={visibleOperations} timeZone={getSiteTimeZone()} />}
 
       {visibleOperations.length === 0 ? (
         <article className="ff-card grid gap-4 border-dashed">
