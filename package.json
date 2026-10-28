@@ -36,7 +36,7 @@
     "cross-env": "^10.1.0",
     "dotenv": "18.0.5",
     "graphql": "^16.14.2",
-    "next": "16.4.2",
+    "next": "16.4.3",
     "nodemailer": "^10.1.0",
     "payload": "3.90.2",
     "react": "19.3.0",
