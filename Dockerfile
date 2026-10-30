@@ -1,4 +1,4 @@
-FROM node:24.22.1-alpine AS base
+FROM node:26.13.0-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN npx esbuild scripts/seed.ts scripts/seed-user.ts scripts/run-migrations.ts \
   --bundle \
   --platform=node \
   --format=esm \
-  --target=node24 \
+  --target=node26 \
   --banner:js="import { createRequire as __trustredCreateRequire } from 'node:module';const require = __trustredCreateRequire(import.meta.url);" \
   --outdir=/app/dist/scripts \
   --external:dotenv \
@@ -28,7 +28,7 @@ RUN mkdir -p /app/dist/migrations \
       --bundle \
       --platform=node \
       --format=esm \
-      --target=node24 \
+      --target=node26 \
       --banner:js="import { createRequire as __trustredCreateRequire } from 'node:module';const require = __trustredCreateRequire(import.meta.url);" \
       --outfile=/app/dist/migrations/index.js \
       --external:sharp \
