@@ -28,7 +28,7 @@
     "@payloadcms/db-sqlite": "3.92.1",
     "@payloadcms/next": "3.92.1",
     "@payloadcms/plugin-form-builder": "3.92.1",
-    "@payloadcms/plugin-nested-docs": "3.92.1",
+    "@payloadcms/plugin-nested-docs": "3.93.0",
     "@payloadcms/plugin-seo": "3.92.1",
     "@payloadcms/richtext-lexical": "3.92.1",
     "@payloadcms/storage-s3": "3.92.1",
