@@ -4,7 +4,7 @@ FROM base AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --strict-peer-deps --engine-strict --strict-allow-scripts
 
 FROM base AS builder
 WORKDIR /app
