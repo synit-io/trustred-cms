@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@payloadcms/db-sqlite": "3.92.1",
-    "@payloadcms/next": "3.92.1",
+    "@payloadcms/next": "3.94.1",
     "@payloadcms/plugin-form-builder": "3.92.1",
     "@payloadcms/plugin-nested-docs": "3.92.1",
     "@payloadcms/plugin-seo": "3.92.1",
