@@ -45,7 +45,11 @@ import {
   postCategoryLabels,
 } from '@/lib/trustred/public-content'
 import { applyWarningPresetToBlock, findWarningPreset } from '@/lib/trustred/warning-presets'
-import { getWarningSnapshotFromConfig } from '@/lib/trustred/warnings'
+import {
+  getWarningSnapshotFromConfig,
+  OFFICIAL_WARNING_SOURCE_URLS,
+  type WarningSnapshot,
+} from '@/lib/trustred/warnings'
 import { getSiteTimeZone } from '@/lib/trustred/time'
 
 type Props = {
@@ -208,6 +212,36 @@ const dateFormat = new Intl.DateTimeFormat('de-DE', {
   year: 'numeric',
   timeZone: getSiteTimeZone(),
 })
+
+function WarningFeedNotice({
+  provider,
+  snapshot,
+}: {
+  provider: WarningsBlockData['provider']
+  snapshot: WarningSnapshot | null
+}) {
+  if (snapshot?.warningFeedState === 'available') return null
+
+  const label = provider === 'dwd' ? 'DWD' : 'NINA'
+
+  return (
+    <div className="ff-callout ff-callout--warning">
+      <p>
+        {snapshot?.warningFeedState === 'partial'
+          ? `${label}-Warnmeldungen sind verfügbar, einzelne Details fehlen jedoch.`
+          : `${label}-Warnquelle derzeit nicht verfügbar.`}
+      </p>
+      <a
+        className="ff-btn-tertiary min-h-9"
+        href={OFFICIAL_WARNING_SOURCE_URLS[provider]}
+        rel="noreferrer"
+        target="_blank"
+      >
+        Offizielle {label}-Warnungen ansehen
+      </a>
+    </div>
+  )
+}
 
 function renderFeedCard(source: string, item: Record<string, unknown>, index: number) {
   if (source === 'posts') {
@@ -695,10 +729,9 @@ export async function PageRenderer({
           }
         }
 
-        const ninaPreset =
-          warningsBlock.provider === 'dwd' && warningsBlock.ninaPresetKey
-            ? findWarningPreset(presets, warningsBlock.ninaPresetKey, 'nina')
-            : null
+        const ninaPresetKey =
+          warningsBlock.provider === 'dwd' ? warningsBlock.ninaPresetKey : null
+        const ninaPreset = ninaPresetKey ? findWarningPreset(presets, ninaPresetKey, 'nina') : null
         const [snapshot, ninaSnapshot] = await Promise.all([
           getWarningSnapshotFromConfig({
             dwdRegionIds: warningsBlock.dwdRegionIds,
@@ -751,6 +784,9 @@ export async function PageRenderer({
                           ? dateFormat.format(new Date(snapshot.updatedAt))
                           : 'Nicht verfügbar'}
                     </p>
+                    <div className="mt-4 empty:hidden">
+                      <WarningFeedNotice provider={warningsBlock.provider} snapshot={snapshot} />
+                    </div>
                     {warningsBlock.provider === 'dwd' ? (
                       <div className="mt-4 grid gap-4">
                         <div className="rounded-xl border border-border-subtle bg-white px-4 py-4">
@@ -799,18 +835,23 @@ export async function PageRenderer({
                               </li>
                             ))}
                           </ul>
-                        ) : (
+                        ) : snapshot?.warningFeedState === 'available' ? (
                           <div className="ff-callout ff-callout--success">
                             Aktuell liegen keine amtlichen DWD-Warnmeldungen für diese Region vor.
                           </div>
-                        )}
-                        {ninaSnapshot ? (
+                        ) : null}
+                        {ninaPresetKey ? (
                           <div className="rounded-xl border border-border-subtle bg-white px-4 py-4">
                             <p className="ff-label">NINA Ergänzung</p>
                             <p className="mt-2 font-semibold text-neutral-900">
-                              Ergänzende Bevölkerungswarnungen für {ninaSnapshot.regionLabel}
+                              {ninaSnapshot
+                                ? `Ergänzende Bevölkerungswarnungen für ${ninaSnapshot.regionLabel}`
+                                : 'Ergänzende Bevölkerungswarnungen'}
                             </p>
-                            {ninaSnapshot.entries.length > 0 ? (
+                            <div className="mt-3 empty:hidden">
+                              <WarningFeedNotice provider="nina" snapshot={ninaSnapshot} />
+                            </div>
+                            {ninaSnapshot?.entries.length ? (
                               <ul className="mt-4 grid gap-3 text-sm text-neutral-700">
                                 {ninaSnapshot.entries.map((item, itemIndex) => (
                                   <li
@@ -829,12 +870,12 @@ export async function PageRenderer({
                                   </li>
                                 ))}
                               </ul>
-                            ) : (
+                            ) : ninaSnapshot?.warningFeedState === 'available' ? (
                               <p className="mt-3 text-sm text-neutral-700">
                                 Aktuell liegen keine ergänzenden NINA-Meldungen für diese Region
                                 vor.
                               </p>
-                            )}
+                            ) : null}
                           </div>
                         ) : null}
                       </div>
@@ -868,11 +909,11 @@ export async function PageRenderer({
                           </li>
                         ))}
                       </ul>
-                    ) : (
+                    ) : snapshot?.warningFeedState === 'available' ? (
                       <div className="ff-callout ff-callout--success mt-4">
                         Aktuell liegen keine Warnmeldungen für diese Konfiguration vor.
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </article>
                 <article className="ff-card">

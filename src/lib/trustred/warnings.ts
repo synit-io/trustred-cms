@@ -54,7 +54,9 @@ export type WarningSnapshot = {
   sourceState?: 'degraded' | 'empty' | 'ok'
   staleAfterSeconds: number
   status?: 'error' | 'fallback' | 'live'
-  updatedAt: string
+  updatedAt?: string
+  // Separate warning data availability from optional forecasts and maps.
+  warningFeedState: 'available' | 'partial' | 'unavailable'
 }
 
 const DWD_USER_AGENT = 'Trustred-CMS/1.0'
@@ -62,6 +64,11 @@ const DWD_FORECAST_TIMEOUT_MS = 8000
 const REMOTE_ASSET_TIMEOUT_MS = 4000
 const WARNING_FEED_REVALIDATE_SECONDS = 900
 const FORECAST_REVALIDATE_SECONDS = 3600
+export const OFFICIAL_WARNING_SOURCE_URLS = {
+  dwd: 'https://www.dwd.de/DE/wetter/warnungen_gemeinden/warnWetter_node.html',
+  nina: 'https://warnung.bund.de/meldungen',
+} as const
+
 const allowedWarningHosts = ['dwd.de', 'warnung.bund.de'] as const
 
 function normalizeAllowedWarningUrl(value: string | null | undefined, provider: WarningProvider) {
@@ -115,6 +122,12 @@ async function fetchWithRetry(
   }
 
   throw lastError instanceof Error ? lastError : new Error('Warnungsanfrage fehlgeschlagen')
+}
+
+function toWarningTimestamp(value: number | string | undefined) {
+  if (!value) return undefined
+  const date = new Date(value)
+  return Number.isFinite(date.getTime()) ? date.toISOString() : undefined
 }
 
 function severityFromNumber(level?: number): WarningSeverity {
@@ -295,7 +308,7 @@ const getCachedDwdWarnings = unstable_cache(
       throw new Error('Unexpected DWD warnings payload format')
     }
 
-    return JSON.parse(match[1]) as {
+    const payload = JSON.parse(match[1]) as {
       time?: number
       warnings?: Record<
         string,
@@ -312,8 +325,17 @@ const getCachedDwdWarnings = unstable_cache(
         }>
       >
     }
+    if (
+      !payload?.warnings ||
+      typeof payload.warnings !== 'object' ||
+      Array.isArray(payload.warnings) ||
+      !Object.values(payload.warnings).every(Array.isArray)
+    ) {
+      throw new Error('Unexpected DWD warnings payload format')
+    }
+    return { time: payload.time, warnings: payload.warnings }
   },
-  ['trustred-dwd-warnings'],
+  ['trustred-dwd-warnings-v2'],
   {
     revalidate: WARNING_FEED_REVALIDATE_SECONDS,
     tags: ['trustred-warnings', 'trustred-warnings-dwd'],
@@ -419,7 +441,7 @@ const getCachedNinaDashboard = unstable_cache(
       throw new Error(`NINA dashboard request failed: ${response.status}`)
     }
 
-    return (await response.json()) as Array<{
+    const dashboard = (await response.json()) as Array<{
       id?: string
       i18nTitle?: { de?: string }
       payload?: {
@@ -433,6 +455,13 @@ const getCachedNinaDashboard = unstable_cache(
       }
       sent?: string
     }>
+    if (
+      !Array.isArray(dashboard) ||
+      dashboard.some((entry) => !entry || typeof entry !== 'object' || Array.isArray(entry))
+    ) {
+      throw new Error('Unexpected NINA dashboard payload format')
+    }
+    return dashboard
   },
   ['trustred-nina-dashboard'],
   {
@@ -474,18 +503,21 @@ const getCachedNinaDetail = unstable_cache(
 )
 
 async function getDwdSnapshot(config: WarningConfig): Promise<WarningSnapshot> {
-  const payload = await getCachedDwdWarnings()
   const selectedIds = (config.dwdRegionIds ?? [])
     .map((item) => String(item?.regionId ?? '').trim())
     .filter(Boolean)
   const selectedStates = (config.dwdStates ?? [])
     .map((item) => String(item?.state ?? '').trim())
     .filter(Boolean)
+  if (selectedIds.length === 0 && selectedStates.length === 0) {
+    throw new Error('Es ist keine DWD-Warnregion hinterlegt.')
+  }
+  const payload = await getCachedDwdWarnings()
   const selectedIdSet = new Set(selectedIds)
   const selectedStateSet = new Set(selectedStates)
   const entryKeys = new Set<string>()
 
-  const entries = Object.entries(payload.warnings ?? {})
+  const entries = Object.entries(payload.warnings)
     .flatMap(([regionId, warnings]) => {
       const state = String(warnings?.[0]?.state ?? '').trim()
       const includeByRegionId = selectedIdSet.has(regionId)
@@ -511,13 +543,13 @@ async function getDwdSnapshot(config: WarningConfig): Promise<WarningSnapshot> {
 
         return {
           description: stripHtml(entry.description || entry.instruction || entry.event || ''),
-          endsAt: entry.end ? new Date(entry.end).toISOString() : undefined,
+          endsAt: toWarningTimestamp(entry.end),
           headline: String(entry.headline ?? entry.event ?? 'DWD Warnung'),
           instruction: stripHtml(entry.instruction ?? ''),
           provider: 'dwd' as const,
           severity: severityFromNumber(entry.level),
           source: String(entry.regionName ?? entry.state ?? config.regionLabel ?? 'DWD'),
-          startsAt: entry.start ? new Date(entry.start).toISOString() : undefined,
+          startsAt: toWarningTimestamp(entry.start),
           tag: String(entry.event ?? '').trim() || undefined,
         }
       })
@@ -539,7 +571,7 @@ async function getDwdSnapshot(config: WarningConfig): Promise<WarningSnapshot> {
     : ''
   const sourceUrl =
     normalizeAllowedWarningUrl(config.sourceUrl ?? config.forecastUrl, 'dwd') ??
-    'https://www.dwd.de'
+    OFFICIAL_WARNING_SOURCE_URLS.dwd
 
   const dwdWeather = await getCachedDwdForecastSnapshot(
     forecastUrl,
@@ -569,7 +601,8 @@ async function getDwdSnapshot(config: WarningConfig): Promise<WarningSnapshot> {
           : 'ok',
     staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
     status: dwdWeather.updatedLabel === 'Nicht verfügbar' ? 'fallback' : 'live',
-    updatedAt: payload.time ? new Date(payload.time).toISOString() : new Date().toISOString(),
+    updatedAt: toWarningTimestamp(payload.time),
+    warningFeedState: 'available',
   }
 }
 
@@ -583,11 +616,11 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
       provider: 'nina',
       regionLabel: String(config.regionLabel ?? 'NINA Region'),
       sourceUrl:
-        normalizeAllowedWarningUrl(config.sourceUrl, 'nina') ?? 'https://warnung.bund.de/meldungen',
+        normalizeAllowedWarningUrl(config.sourceUrl, 'nina') ?? OFFICIAL_WARNING_SOURCE_URLS.nina,
       sourceState: 'degraded',
       staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
       status: 'fallback',
-      updatedAt: new Date().toISOString(),
+      warningFeedState: 'unavailable',
     }
   }
 
@@ -596,10 +629,11 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
   const detailedEntries = await Promise.all(
     dashboard.slice(0, 6).map(async (entry) => {
       const id = String(entry.id ?? '').trim()
-      const detail = id ? await getCachedNinaDetail(id) : null
+      // A failed detail request must not discard warnings from the regional dashboard.
+      const detail = id ? await getCachedNinaDetail(id).catch(() => null) : null
       const info = detail?.info?.[0]
 
-      return {
+      const warning = {
         description: stripHtml(info?.description ?? ''),
         detailUrl: id ? `https://warnung.bund.de/meldung/${encodeURIComponent(id)}` : undefined,
         headline: String(info?.headline ?? entry.i18nTitle?.de ?? 'NINA Warnung'),
@@ -607,13 +641,16 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
         provider: 'nina' as const,
         severity: severityFromText(info?.severity ?? entry.payload?.data?.severity),
         source: String(entry.payload?.data?.provider ?? 'NINA'),
-        startsAt: entry.sent ? new Date(entry.sent).toISOString() : undefined,
+        startsAt: toWarningTimestamp(entry.sent),
         tag: String(info?.event ?? entry.payload?.data?.transKeys?.event ?? '').trim() || undefined,
       } satisfies WarningEntry
+      return { warning, hasDetail: Boolean(info && typeof info === 'object') }
     }),
   )
 
+  const hasMissingDetails = detailedEntries.some(({ hasDetail }) => !hasDetail)
   const entries = detailedEntries
+    .map(({ warning }) => warning)
     .filter((entry) => {
       const entryKey = [
         entry.headline,
@@ -636,18 +673,20 @@ async function getNinaSnapshot(config: WarningConfig): Promise<WarningSnapshot> 
   return {
     entries,
     fetchedAt: new Date().toISOString(),
-    note:
-      entries.length === 0
+    note: hasMissingDetails
+      ? 'Einzelne NINA-Warndetails konnten nicht geladen werden.'
+      : entries.length === 0
         ? 'NINA ist erreichbar, liefert aktuell aber keine passenden Warnmeldungen.'
         : undefined,
     provider: 'nina',
     regionLabel: String(config.regionLabel ?? 'NINA Region'),
     sourceUrl:
-      normalizeAllowedWarningUrl(config.sourceUrl, 'nina') ?? 'https://warnung.bund.de/meldungen',
-    sourceState: entries.length === 0 ? 'empty' : 'ok',
+      normalizeAllowedWarningUrl(config.sourceUrl, 'nina') ?? OFFICIAL_WARNING_SOURCE_URLS.nina,
+    sourceState: hasMissingDetails ? 'degraded' : entries.length === 0 ? 'empty' : 'ok',
     staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
-    status: 'live',
+    status: hasMissingDetails ? 'fallback' : 'live',
     updatedAt: new Date().toISOString(),
+    warningFeedState: hasMissingDetails ? 'partial' : 'available',
   }
 }
 
@@ -673,11 +712,12 @@ export async function getWarningSnapshotFromConfig(
       provider: config.provider,
       regionLabel: String(config.regionLabel ?? 'Warnregion'),
       sourceUrl:
-        normalizeAllowedWarningUrl(config.sourceUrl ?? config.forecastUrl, config.provider) ?? '',
+        normalizeAllowedWarningUrl(config.sourceUrl ?? config.forecastUrl, config.provider) ??
+        OFFICIAL_WARNING_SOURCE_URLS[config.provider],
       sourceState: 'degraded',
       staleAfterSeconds: WARNING_FEED_REVALIDATE_SECONDS,
       status: 'error',
-      updatedAt: new Date().toISOString(),
+      warningFeedState: 'unavailable',
     }
   }
 

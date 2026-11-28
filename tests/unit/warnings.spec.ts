@@ -15,7 +15,9 @@ describe('warning provider fallback', () => {
 
     const snapshot = await getWarningSnapshotFromConfig({
       provider,
-      ...(provider === 'nina' ? { ninaArs: '110000000000' } : {}),
+      ...(provider === 'nina'
+        ? { ninaArs: '110000000000' }
+        : { dwdRegionIds: [{ regionId: '123' }] }),
     })
 
     expect(snapshot).toMatchObject({
@@ -24,6 +26,8 @@ describe('warning provider fallback', () => {
       provider,
       sourceState: 'degraded',
       status: 'error',
+      warningFeedState: 'unavailable',
     })
+    expect(snapshot?.updatedAt).toBeUndefined()
   })
 })
